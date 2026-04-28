@@ -31,10 +31,23 @@ $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
 dotnet build TheGamePond.sln --configfile NuGet.Config
 ```
 
+## Sprint 0 Foundation
+
+Sprint 0 now includes:
+
+- ASP.NET Core Identity wired to Entity Framework Core.
+- PostgreSQL provider configured through `DefaultConnection`.
+- Seeded `Owner`, `Admin`, and `Staff` roles in the initial migration.
+- Optional first owner seed through `SeedAdmin__Email` and `SeedAdmin__Password`.
+- Minimal admin login and protected admin dashboard shell.
+
+See `docs/development/LOCAL_SETUP.md` for database migration and first-owner setup.
+
 ## Planning Docs
 
 - `docs/planning/LEAN_CUSTOM_MARKETPLACE_PLAN.md`
 - `docs/planning/SPRINT_PLAN.md`
 - `docs/planning/ARCHITECTURE_DECISION.md`
 - `docs/planning/SESSION_HANDOFF.md`
+- `docs/development/LOCAL_SETUP.md`
 - `docs/agents/README.md`

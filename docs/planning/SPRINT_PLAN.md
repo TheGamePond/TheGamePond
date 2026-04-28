@@ -51,6 +51,20 @@ Demo:
 - Home page shell uses Game Pond branding.
 - Database migration runs successfully.
 
+Sprint 0 completion status as of 2026-04-28:
+
+- GitHub repo and `sprint-0-foundation` branch are active.
+- ASP.NET Core MVC project builds successfully on .NET 8.
+- Game Pond logo, color tokens, and branded home shell are in place.
+- Entity Framework Core is configured with PostgreSQL.
+- ASP.NET Core Identity is wired into the MVC app.
+- Roles `Owner`, `Admin`, and `Staff` are seeded in the initial migration.
+- Optional first owner seed is available through environment variables.
+- `/Account/Login` renders successfully.
+- `/Admin` is protected and redirects unauthenticated users to login.
+- Initial migration `InitialIdentityFoundation` has been generated.
+- Local HTTP smoke test passed for home, login, and admin redirect.
+
 ## Sprint 1: Product And Inventory Admin
 
 Goal:
@@ -311,4 +325,3 @@ Definition of done:
 - Owner can operate the admin dashboard.
 - Team knows how to deploy/update.
 - Known post-launch backlog is documented.
-

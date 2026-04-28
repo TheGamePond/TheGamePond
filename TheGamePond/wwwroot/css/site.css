@@ -173,6 +173,89 @@ body {
   margin: 0;
 }
 
+.nav-logout {
+  margin: 0;
+}
+
+.auth-shell,
+.admin-shell {
+  padding: 64px 0;
+}
+
+.auth-panel,
+.admin-tile {
+  background: #fff;
+  border: 1px solid var(--pond-border);
+  border-radius: 8px;
+  box-shadow: 0 18px 42px rgba(15, 61, 94, 0.08);
+}
+
+.auth-panel {
+  padding: 32px;
+}
+
+.auth-panel h1 {
+  color: var(--pond-dark-blue);
+  font-size: 1.8rem;
+  font-weight: 850;
+}
+
+.auth-panel p {
+  color: var(--pond-muted);
+  margin: 0;
+}
+
+.auth-logo {
+  height: 88px;
+  margin-bottom: 1rem;
+  object-fit: contain;
+  width: 88px;
+}
+
+.admin-heading {
+  align-items: end;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.admin-heading h1 {
+  color: var(--pond-dark-blue);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1;
+  margin: 0;
+}
+
+.admin-status {
+  background: rgba(108, 194, 74, 0.16);
+  border: 1px solid rgba(46, 125, 50, 0.18);
+  border-radius: 999px;
+  color: var(--pond-dark-green);
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.45rem 0.8rem;
+  white-space: nowrap;
+}
+
+.admin-tile {
+  height: 100%;
+  padding: 28px;
+}
+
+.admin-tile h2 {
+  color: var(--pond-dark-blue);
+  font-size: 1.2rem;
+  font-weight: 850;
+}
+
+.admin-tile p {
+  color: var(--pond-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
 .footer {
   background: #fff;
   bottom: 0;
@@ -180,4 +263,11 @@ body {
   line-height: 72px;
   position: absolute;
   width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .admin-heading {
+    align-items: start;
+    flex-direction: column;
+  }
 }

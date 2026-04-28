@@ -1,6 +1,6 @@
 # The Game Pond Session Handoff
 
-Date: 2026-04-27
+Date: 2026-04-28
 Workspace: `c:\Users\silve\Projects\Miguels Project`
 Drive root: https://drive.google.com/drive/folders/1Kcx60Sw7aNemvG_JDc9Q2El5H8T0Pzwu
 
@@ -65,6 +65,39 @@ The plan gives the client:
   - This file.
 - `agents/`
   - Updated C#/.NET agent briefs.
+- `docs/development/LOCAL_SETUP.md`
+  - Added local database, migration, run, and first-owner setup notes.
+
+## Sprint 0 Code Status
+
+Sprint 0 foundation is implemented in branch `sprint-0-foundation`.
+
+Completed:
+
+- ASP.NET Core MVC app builds on .NET 8.
+- Game Pond brand assets are copied into `wwwroot/images/brand/`.
+- Home page and shared layout use the logo and brand tokens.
+- EF Core is configured with Npgsql/PostgreSQL.
+- ASP.NET Core Identity is configured with `ApplicationUser`.
+- `ApplicationDbContext` is added.
+- Roles are defined as `Owner`, `Admin`, and `Staff`.
+- Initial Identity migration is generated as `InitialIdentityFoundation`.
+- Roles are seeded through the migration.
+- Optional first owner user can be seeded through environment variables:
+  - `SeedAdmin__Email`
+  - `SeedAdmin__Password`
+  - `SeedAdmin__DisplayName`
+- `/Account/Login` renders.
+- `/Admin` is protected by role-based authorization.
+
+Verification completed:
+
+- `dotnet build TheGamePond.sln --configfile NuGet.Config`
+- `dotnet ef migrations add InitialIdentityFoundation`
+- Temporary local HTTP smoke test:
+  - `/` returned `200`
+  - `/Account/Login` returned `200`
+  - `/Admin` returned `302` to `/Account/Login?ReturnUrl=%2FAdmin`
 
 ## Reviewed Project Assets
 
@@ -188,14 +221,13 @@ Updated agent files:
 
 ## Next Developer Actions
 
-1. Review `LEAN_CUSTOM_MARKETPLACE_PLAN.md`.
-2. Review `SPRINT_PLAN.md`.
-3. Review the agent files in `agents/`.
-4. Confirm open client questions.
-5. Create or confirm GitHub repo.
-6. Scaffold ASP.NET Core MVC app.
-7. Build Sprint 0 and Sprint 1.
-8. Keep the custom database as source of truth unless client changes direction.
+1. Create a PR from `sprint-0-foundation` into the default branch.
+2. Apply the migration to a real local PostgreSQL database.
+3. Seed the first owner account using environment variables.
+4. Confirm the owner can log into `/Account/Login`.
+5. Confirm open client questions before Sprint 1.
+6. Start Sprint 1 product, inventory, category, SKU, barcode, and image-upload models.
+7. Keep the custom database as source of truth unless client changes direction.
 
 ## Google Drive Note
 
@@ -204,4 +236,3 @@ The target Drive folder is:
 https://drive.google.com/drive/folders/1Kcx60Sw7aNemvG_JDc9Q2El5H8T0Pzwu
 
 The previous session created Drive-native fallback docs, but the connector did not expose folder creation or arbitrary local file upload into a parent folder. Local zip packages should be regenerated after this .NET pivot if the team wants a fresh upload.
-
