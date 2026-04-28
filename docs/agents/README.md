@@ -12,7 +12,8 @@ Current stack:
 - SQL Server Express as alternate database path
 - Razor Views
 - Bootstrap 5.3.8
-- Stripe Checkout first, or Square Payments if chosen
+- Gateway-based checkout; Stripe Checkout is the temporary first adapter
+- Shipping-only fulfillment at launch
 - Budget VPS hosting
 
 Recommended first wave:
@@ -38,4 +39,3 @@ Current source of truth:
 - `../LEAN_CUSTOM_MARKETPLACE_PLAN.md`
 - `../SPRINT_PLAN.md`
 - `../handoff/SESSION_HANDOFF.md`
-

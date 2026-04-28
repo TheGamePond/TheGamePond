@@ -11,7 +11,7 @@ Lean custom marketplace for The Game Pond.
 - Bootstrap 5.3.8
 - PostgreSQL on a budget VPS by default
 - SQL Server Express as an alternate database path
-- Stripe Checkout first, or Square Payments if selected later
+- Payment gateway checkout, with Stripe Checkout as the first temporary adapter
 
 ## Local Build
 
@@ -40,6 +40,8 @@ Sprint 0 now includes:
 - Seeded `Owner`, `Admin`, and `Staff` roles in the initial migration.
 - Optional first owner seed through `SeedAdmin__Email` and `SeedAdmin__Password`.
 - Minimal admin login and protected admin dashboard shell.
+- Shipping-only launch assumption.
+- Payment-gateway-only checkout; no cash/COD/manual payment flow in the MVP.
 
 See `docs/development/LOCAL_SETUP.md` for database migration and first-owner setup.
 

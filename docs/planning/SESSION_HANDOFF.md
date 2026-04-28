@@ -16,7 +16,8 @@ The agreed direction is:
 - Use self-hosted PostgreSQL on a budget Linux VPS by default.
 - SQL Server Express is acceptable if the team chooses a Windows/SQL Server path.
 - Do not start with Shopify, Square Retail, Lightspeed, Azure App Service, or Azure SQL as the core system.
-- Use Stripe Checkout first unless the client prefers Square Payments.
+- Use a payment gateway for checkout. Stripe Checkout is the first temporary adapter, but the provider is expected to change soon, so do not hard-code payment logic to Stripe-only concepts.
+- Launch fulfillment is shipping-only. Local pickup is not part of the MVP unless the client changes direction.
 
 ## Lean Cost Direction
 
@@ -48,7 +49,7 @@ The plan gives the client:
 - A real admin dashboard.
 - Real inventory management.
 - Real order status tracking.
-- A secure payment gateway.
+- A secure payment gateway for all online payment collection.
 - A future path to integrate Square/Shopify/Lightspeed later through adapters.
 
 ## Documents Created Or Updated
@@ -152,7 +153,8 @@ Brand language:
 - Views: Razor Views
 - Styling: Bootstrap 5.3.8, HTML, CSS, light JavaScript
 - Auth: ASP.NET Core Identity with roles
-- Payments: Stripe Checkout first
+- Payments: gateway-based checkout; Stripe Checkout is the temporary first adapter
+- Fulfillment: shipping-only at launch
 - Hosting: budget VPS
 - Reverse proxy: Nginx or Caddy
 - SSL: Let's Encrypt
@@ -166,8 +168,8 @@ The first complete proof of workflow is done when:
 - Admin sets inventory quantity.
 - Product appears on shop page.
 - Customer adds product to cart.
-- Customer pays in Stripe test mode.
-- Stripe webhook marks order as paid.
+- Customer pays through the active payment gateway.
+- Verified payment gateway webhook marks order as paid.
 - Order appears in admin.
 - Inventory decreases.
 - Staff marks order as processing, packed, and shipped.
@@ -209,7 +211,8 @@ Updated agent files:
 
 - Does he need in-person POS on day one?
 - Does he already use Square, Clover, Shopify, spreadsheets, or anything else?
-- Does he want shipping, local pickup, or both?
+- Shipping-only launch is confirmed. Local pickup is deferred.
+- Stripe is the starting payment adapter, but final gateway/provider is still expected to change.
 - How many products should launch on day one?
 - Are used games one quantity under one SKU, or does every used item need a unique SKU?
 - Does he need barcode scanning immediately?
@@ -225,7 +228,7 @@ Updated agent files:
 2. Apply the migration to a real local PostgreSQL database.
 3. Seed the first owner account using environment variables.
 4. Confirm the owner can log into `/Account/Login`.
-5. Confirm open client questions before Sprint 1.
+5. Confirm remaining client questions before Sprint 1: launch product count, POS day-one need, current tools, SKU rules, barcode timing, trade-in payout rules, staff roles, and target launch date.
 6. Start Sprint 1 product, inventory, category, SKU, barcode, and image-upload models.
 7. Keep the custom database as source of truth unless client changes direction.
 

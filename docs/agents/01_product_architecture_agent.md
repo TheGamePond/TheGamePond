@@ -6,7 +6,7 @@ Own the product architecture, scope, sprint plan, data model, and implementation
 
 ## Current Direction
 
-Build a custom ASP.NET Core MVC application with C#, Entity Framework Core, Razor Views, Bootstrap 5.3.8, ASP.NET Core Identity, Stripe Checkout, and a self-hosted PostgreSQL or SQL Server Express database on a budget VPS.
+Build a custom ASP.NET Core MVC application with C#, Entity Framework Core, Razor Views, Bootstrap 5.3.8, ASP.NET Core Identity, gateway-based checkout, and a self-hosted PostgreSQL or SQL Server Express database on a budget VPS. Stripe Checkout is the first temporary payment adapter, and launch fulfillment is shipping-only.
 
 ## Required Skills
 
@@ -43,4 +43,3 @@ Build a custom ASP.NET Core MVC application with C#, Entity Framework Core, Razo
 - Do not switch to Shopify/Square Retail/Lightspeed as the core platform unless the client explicitly changes direction.
 - Do not add multi-vendor marketplace complexity to MVP unless confirmed.
 - Keep Sprint 1 focused on product and inventory admin.
-

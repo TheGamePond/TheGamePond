@@ -8,7 +8,7 @@ Stack: ASP.NET Core MVC, C#, Entity Framework Core, PostgreSQL or SQL Server Exp
 - Keep each sprint demoable.
 - Do not start with Shopify/Square Retail/Lightspeed as the core system.
 - Keep the custom database as the launch source of truth.
-- Use Stripe Checkout for secure payment handling unless Square Payments is chosen.
+- Use a payment gateway for all online payments. Start with Stripe Checkout as the temporary base adapter, but keep the payment layer provider-change-ready.
 - Avoid Azure App Service/Azure SQL for MVP if the goal is lowest fixed monthly cost.
 - Prefer PostgreSQL on a Linux VPS for the cheapest production path.
 
@@ -38,9 +38,12 @@ Build:
 
 Client decisions:
 
-- Shipping, local pickup, or both.
+- Shipping-only launch. Local pickup is out of scope for the MVP unless the client changes direction.
 - Launch product count.
-- Payment provider.
+- Payment provider:
+  - Start with Stripe Checkout as the base adapter.
+  - Keep the payment layer ready to swap providers soon.
+  - All payment collection happens through the chosen payment gateway.
 - Database choice.
 - POS needed on day one or not.
 
@@ -64,6 +67,8 @@ Sprint 0 completion status as of 2026-04-28:
 - `/Admin` is protected and redirects unauthenticated users to login.
 - Initial migration `InitialIdentityFoundation` has been generated.
 - Local HTTP smoke test passed for home, login, and admin redirect.
+- Shipping-only launch direction confirmed.
+- Stripe Checkout remains the initial payment gateway adapter, but provider swap risk is explicitly called out for Sprint 3.
 
 ## Sprint 1: Product And Inventory Admin
 
@@ -144,9 +149,10 @@ Build:
 - Order model.
 - Order item model.
 - Payment event model.
-- Checkout form.
-- Stripe Checkout session creation.
-- Stripe webhook endpoint.
+- Checkout form for customer and shipping details.
+- Payment gateway abstraction/service boundary.
+- Stripe Checkout session creation as the initial adapter.
+- Stripe webhook endpoint as the initial adapter.
 - Webhook signature verification.
 - Idempotency for duplicate webhooks.
 - Payment Received status.
@@ -155,8 +161,8 @@ Build:
 
 Demo:
 
-- Customer checks out with Stripe test card.
-- Webhook marks order paid.
+- Customer checks out with the Stripe test card while Stripe is the active adapter.
+- Verified payment gateway webhook marks order paid.
 - Admin sees new paid order.
 - Inventory decreases.
 

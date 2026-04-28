@@ -9,7 +9,8 @@ Build The Game Pond as a lean custom marketplace website with its own inventory 
 
 Use third parties only where they are strategically necessary:
 
-- Payments: Stripe Checkout first, or Square Payments if the client strongly prefers Square.
+- Payments: secure payment gateway only. Use Stripe Checkout as the first temporary adapter, but keep the code ready for a near-term provider change.
+- Fulfillment: shipping-only for the MVP. Local pickup is deferred unless the client changes direction.
 - Hosting: budget VPS such as Hetzner, Contabo, or similar.
 - Database: self-hosted PostgreSQL by default, or SQL Server Express if the team chooses a Windows-first deployment.
 - Email: Brevo, Mailgun, or similar free/low-cost transactional email service.
@@ -22,7 +23,7 @@ The goal is to launch professionally with low fixed monthly cost, while still gi
 
 Recommended explanation:
 
-> We can start lean by building your own inventory and order system directly into the website admin dashboard. You will not need to pay Shopify or Square monthly at first. The only third-party service we should use immediately is a secure payment gateway, because we should not process credit cards ourselves. The site can run on a budget VPS with a self-hosted database, keeping the fixed monthly bill around $10-$18 in the likely case. Later, if the store grows, we can upgrade hosting, move the database to a managed service, or connect Square/Shopify/Lightspeed through API.
+> We can start lean by building your own inventory and order system directly into the website admin dashboard. You will not need to pay Shopify or Square monthly at first. The only third-party service we should use immediately is a secure payment gateway, because we should not process credit cards ourselves. The MVP can launch shipping-only, with Stripe Checkout as the first payment adapter while still keeping the code ready to switch providers. The site can run on a budget VPS with a self-hosted database, keeping the fixed monthly bill around $10-$18 in the likely case. Later, if the store grows, we can upgrade hosting, move the database to a managed service, or connect Square/Shopify/Lightspeed through API.
 
 ## 3. Recommended Technical Architecture
 
@@ -38,7 +39,8 @@ Recommended explanation:
 - Frontend views: Razor Views
 - Styling/UI: HTML, CSS, Bootstrap 5.3.8, and JavaScript where needed
 - Admin auth: ASP.NET Core Identity with role-based permissions
-- Payments: Stripe Checkout first, or Square Payments if client prefers Square
+- Payments: gateway-based checkout; Stripe Checkout is the temporary first adapter
+- Fulfillment: shipping-only at launch
 - Hosting: budget VPS, preferably Linux VPS for cost efficiency
 - Web server/reverse proxy: Nginx or Caddy in front of Kestrel
 - File storage at launch: local VPS storage with organized uploads folder and backup routine
@@ -156,7 +158,7 @@ Core order features:
 
 - Order number
 - Customer info
-- Shipping/pickup option
+- Shipping address and shipping method fields
 - Line items
 - Taxes
 - Discounts
@@ -225,8 +227,8 @@ Used for:
 
 Used for:
 
-- Creating Stripe Checkout sessions
-- Receiving Stripe webhooks
+- Creating payment gateway checkout sessions
+- Receiving payment gateway webhooks
 - Verifying webhook signatures
 - Marking orders as paid
 - Preventing duplicate webhook handling
@@ -242,7 +244,7 @@ At launch:
 - Products live in our database.
 - Inventory counts live in our database.
 - Orders live in our database.
-- Payments are confirmed by Stripe/Square webhook.
+- Payments are confirmed by verified gateway webhooks.
 - Staff manages fulfillment in our admin dashboard.
 
 Later:
@@ -297,7 +299,7 @@ Detailed sprint plan lives in `SPRINT_PLAN.md`.
 
 ### Sprint 3: Checkout And Orders
 
-- Stripe Checkout.
+- Payment gateway checkout, with Stripe Checkout as the first adapter.
 - Payment webhook.
 - Order creation.
 - Inventory decrement.
@@ -354,7 +356,8 @@ Second wave:
 
 - Does he need in-person POS on day one?
 - Does he already use Square, Clover, Shopify, spreadsheets, or anything else?
-- Does he want shipping, local pickup, or both?
+- Shipping-only launch is confirmed. Local pickup is deferred.
+- Final payment gateway/provider is still expected to change; Stripe remains the starter adapter.
 - How many products should launch on day one?
 - Are used games one quantity under one SKU, or does every used item need a unique SKU?
 - Does he need barcode scanning immediately?
@@ -373,9 +376,8 @@ The first complete proof of workflow is done when:
 - Admin sets inventory quantity.
 - Product appears on shop page.
 - Customer adds product to cart.
-- Customer pays in Stripe test mode.
-- Stripe webhook marks order as paid.
+- Customer pays through the active gateway test mode.
+- Verified gateway webhook marks order as paid.
 - Order appears in admin.
 - Inventory decreases.
 - Staff marks order as processing, packed, and shipped.
-

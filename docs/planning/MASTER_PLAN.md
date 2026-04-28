@@ -86,7 +86,8 @@ Recommended application architecture:
 - ORM: Entity Framework Core
 - Frontend views: Razor Views with HTML, CSS, Bootstrap 5.3.8, and JavaScript where needed
 - Admin auth: ASP.NET Core Identity with role-based permissions
-- Payments: Stripe Checkout first, or Square Payments if client prefers Square
+- Payments: gateway-based checkout; Stripe Checkout is the temporary first adapter
+- Fulfillment: shipping-only at launch
 - Hosting: budget VPS such as Hetzner, Contabo, or similar
 - Web server/reverse proxy: Nginx or Caddy in front of Kestrel
 - File storage at launch: local VPS uploads directory with backup routine
@@ -131,7 +132,7 @@ Current recommendation:
 
 - Do not use Square/Shopify/Lightspeed as the launch inventory/order platform.
 - Build custom inventory and order handling into the admin dashboard.
-- Use Stripe Checkout first unless the client prefers Square Payments.
+- Use a payment gateway for checkout. Stripe Checkout is the temporary first adapter, but keep provider-specific logic isolated so the gateway can change soon.
 - Keep Square/Shopify/Lightspeed as future API adapter options only.
 
 ## 4. Core Data Model
@@ -212,8 +213,8 @@ Adapter responsibilities:
 
 - Confirm whether this is single-store ecommerce or true multi-seller marketplace.
 - Confirm POS/inventory software preference and budget.
-- Confirm payment processor preference.
-- Confirm shipping carriers and local pickup needs.
+- Confirm final payment gateway/provider preference.
+- Confirm shipping carriers and shipping-only rules.
 - Confirm tax handling, return policy, trade-in policy, and warranty policy.
 - Gather product sample data and product photos.
 - Decide launch catalog size.
@@ -433,13 +434,13 @@ Purpose:
 
 Skills:
 
-- Stripe Checkout or Square Payments
+- Active payment gateway SDK/API, with Stripe Checkout as the first adapter
 - Payment webhooks
 - Refund flows
 - Sales tax strategy
 - Shipping rate APIs
 - Label creation
-- Local pickup logic
+- Shipping-only fulfillment rules for MVP
 - PCI-safe architecture
 
 Outputs:
@@ -575,8 +576,8 @@ Outputs:
 - Is this single-store ecommerce at launch, or multi-vendor marketplace at launch?
 - Which system does the owner already use, if any: Square, Shopify, Lightspeed, Clover, Zoho, Cin7, QuickBooks, spreadsheets?
 - Does the store need in-person POS on day one?
-- Will online checkout support shipping, local pickup, or both?
-- Which payment processor is preferred?
+- Online checkout is shipping-only for MVP; local pickup is deferred.
+- Which payment gateway/provider will replace or confirm the temporary Stripe adapter?
 - Is barcode scanning required at launch?
 - Does used inventory need one-off SKUs per item?
 - Does trade-in payout use cash, store credit, or both?

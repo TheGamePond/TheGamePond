@@ -15,7 +15,7 @@ Stack:
 - Entity Framework Core
 - Razor Views
 - ASP.NET Core Identity
-- Stripe Checkout
+- Payment gateway checkout, with Stripe Checkout as the temporary first adapter
 - Azure App Service
 - Azure Blob Storage
 - Azure Key Vault/App Configuration
@@ -46,7 +46,7 @@ Stack:
 - Razor Views
 - Bootstrap 5.3.8
 - ASP.NET Core Identity
-- Stripe Checkout
+- Payment gateway checkout, with Stripe Checkout as the temporary first adapter
 - Budget VPS
 - Local uploads folder with backups
 - Let's Encrypt SSL
@@ -79,7 +79,8 @@ The decided launch architecture is:
 - SQL Server Express only if the team chooses a Windows-first deployment
 - Razor Views with Bootstrap 5.3.8
 - ASP.NET Core Identity
-- Stripe Checkout
+- Payment gateway checkout, with Stripe Checkout as the temporary first adapter
+- Shipping-only fulfillment at launch
 - Let's Encrypt SSL
 - Budget VPS hosting
 
@@ -105,4 +106,3 @@ Upgrade only when the business needs it:
 - Monitoring
 - Barcode/scanner integrations
 - Square/Shopify/Lightspeed API adapter
-
