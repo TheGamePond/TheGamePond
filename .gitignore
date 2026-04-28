@@ -68,6 +68,8 @@ artifacts/
 .appdata/
 .localappdata/
 dotnet-install.ps1
+run-dev-server.ps1
+dev-server*.log
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
