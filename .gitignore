@@ -72,6 +72,8 @@ run-dev-server.ps1
 dev-server*.log
 .env
 .env.*
+!.env.example
+!.env.*.example
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
