@@ -20,3 +20,23 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.hero {
+    min-height: 90vh;
+    background: linear-gradient(135deg, #07111f, #0d6efd, #001219);
+}
+
+    .hero h1 {
+        letter-spacing: 2px;
+    }
+
+    .hero .btn {
+        padding: 12px 28px;
+        font-size: 1.1rem;
+    }
+
+.hero,
+.rounded-section {
+    border-radius: 20px;
+    overflow: hidden;
+}
