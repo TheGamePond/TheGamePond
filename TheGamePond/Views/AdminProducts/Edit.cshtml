@@ -15,7 +15,7 @@
         </div>
 
         <div class="auth-panel product-form-panel">
-            <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
                 <input asp-for="Id" type="hidden" />
                 <partial name="_ProductForm" model="Model" />
             </form>

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using TheGamePond.Models.Catalog;
 
 namespace TheGamePond.Models.Admin;
@@ -56,4 +57,9 @@ public class ProductFormViewModel
     [Display(Name = "Location code")]
     [StringLength(80)]
     public string? LocationCode { get; set; }
+
+    [Display(Name = "Product image")]
+    public IFormFile? ImageUpload { get; set; }
+
+    public IReadOnlyList<ProductImageSummaryViewModel> ExistingImages { get; set; } = new List<ProductImageSummaryViewModel>();
 }

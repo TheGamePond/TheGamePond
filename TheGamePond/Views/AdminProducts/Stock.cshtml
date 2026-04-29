@@ -1,0 +1,71 @@
+@model StockAdjustmentViewModel
+
+@{
+    ViewData["Title"] = "Adjust Stock";
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Inventory adjustment</p>
+                <h1>Adjust Stock</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-action="Index">Back to products</a>
+        </div>
+
+        <div class="auth-panel stock-panel">
+            <div class="stock-context">
+                <div>
+                    <span class="feature-label">Product</span>
+                    <h2>@Model.ProductName</h2>
+                    <p>@Model.Sku</p>
+                </div>
+                <div class="metric-tile">
+                    <span>Current stock</span>
+                    <strong>@Model.CurrentQuantity</strong>
+                </div>
+            </div>
+
+            <form asp-action="Stock" asp-route-id="@Model.ProductId" method="post">
+                <input asp-for="ProductId" type="hidden" />
+                <input asp-for="ProductName" type="hidden" />
+                <input asp-for="Sku" type="hidden" />
+                <input asp-for="CurrentQuantity" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="QuantityDelta" class="form-label"></label>
+                        <input asp-for="QuantityDelta" class="form-control" type="number" />
+                        <span asp-validation-for="QuantityDelta" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Reason" class="form-label"></label>
+                        <select asp-for="Reason" asp-items="Html.GetEnumSelectList<StockAdjustmentReason>()" class="form-select"></select>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="NewQuantity" class="form-label"></label>
+                        <input value="@Model.NewQuantity" class="form-control" disabled />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="product-form-actions">
+                    <button type="submit" class="btn btn-pond">Save stock adjustment</button>
+                    <a class="btn btn-link" asp-action="Index">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

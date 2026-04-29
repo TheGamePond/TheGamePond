@@ -1,3 +1,5 @@
+@model AdminDashboardViewModel
+
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -10,6 +12,25 @@
                 <h1>Admin Dashboard</h1>
             </div>
             <span class="admin-status">Sprint 1 inventory</span>
+        </div>
+
+        <div class="admin-metrics">
+            <div class="metric-tile">
+                <span>Products</span>
+                <strong>@Model.ProductCount</strong>
+            </div>
+            <div class="metric-tile">
+                <span>Active</span>
+                <strong>@Model.ActiveProductCount</strong>
+            </div>
+            <div class="metric-tile metric-warning">
+                <span>Low stock</span>
+                <strong>@Model.LowStockCount</strong>
+            </div>
+            <div class="metric-tile">
+                <span>Drafts</span>
+                <strong>@Model.DraftProductCount</strong>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -36,5 +57,24 @@
                 </div>
             </div>
         </div>
+
+        @if (Model.LowStockProducts.Count > 0)
+        {
+            <div class="admin-alert-panel">
+                <div>
+                    <span class="feature-label">Low stock</span>
+                    <h2>Needs attention</h2>
+                </div>
+                <div class="low-stock-list">
+                    @foreach (var product in Model.LowStockProducts)
+                    {
+                        <a asp-controller="AdminProducts" asp-action="Stock" asp-route-id="@product.Id">
+                            <span>@product.Name</span>
+                            <strong>@(product.InventoryItem?.QuantityOnHand ?? 0)</strong>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </section>

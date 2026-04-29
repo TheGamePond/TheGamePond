@@ -74,11 +74,27 @@
                             var quantity = product.InventoryItem?.QuantityOnHand ?? 0;
                             var threshold = product.InventoryItem?.LowStockThreshold ?? 0;
                             var stockClass = quantity <= threshold ? "stock-badge stock-badge-low" : "stock-badge";
+                            var primaryImage = product.Images
+                                .OrderByDescending(image => image.IsPrimary)
+                                .ThenBy(image => image.SortOrder)
+                                .FirstOrDefault();
 
                             <tr>
                                 <td>
-                                    <div class="table-title">@product.Name</div>
-                                    <div class="table-subtitle">@product.Platform</div>
+                                    <div class="product-cell">
+                                        @if (primaryImage is not null)
+                                        {
+                                            <img src="@primaryImage.ImagePath" alt="@primaryImage.AltText" />
+                                        }
+                                        else
+                                        {
+                                            <span class="product-thumb-placeholder">TGP</span>
+                                        }
+                                        <div>
+                                            <div class="table-title">@product.Name</div>
+                                            <div class="table-subtitle">@product.Platform</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>@product.Sku</td>
                                 <td>@product.Category?.Name</td>
@@ -87,7 +103,10 @@
                                 <td><span class="@stockClass">@quantity</span></td>
                                 <td>@product.Status</td>
                                 <td class="text-end">
-                                    <a class="btn btn-outline-pond btn-sm" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                                    <div class="table-actions">
+                                        <a class="btn btn-outline-pond btn-sm" asp-action="Stock" asp-route-id="@product.Id">Stock</a>
+                                        <a class="btn btn-outline-pond btn-sm" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                                    </div>
                                 </td>
                             </tr>
                         }

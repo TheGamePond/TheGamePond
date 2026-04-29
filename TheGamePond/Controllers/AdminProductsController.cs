@@ -14,11 +14,22 @@ namespace TheGamePond.Controllers;
 [Route("Admin/Products")]
 public class AdminProductsController : Controller
 {
-    private readonly ApplicationDbContext _context;
+    private const long MaxImageBytes = 4 * 1024 * 1024;
+    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    };
 
-    public AdminProductsController(ApplicationDbContext context)
+    private readonly ApplicationDbContext _context;
+    private readonly IWebHostEnvironment _environment;
+
+    public AdminProductsController(ApplicationDbContext context, IWebHostEnvironment environment)
     {
         _context = context;
+        _environment = environment;
     }
 
     [HttpGet("")]
@@ -27,6 +38,7 @@ public class AdminProductsController : Controller
         var products = _context.Products
             .Include(product => product.Category)
             .Include(product => product.InventoryItem)
+            .Include(product => product.Images)
             .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -78,6 +90,7 @@ public class AdminProductsController : Controller
     public async Task<IActionResult> Create(ProductFormViewModel model)
     {
         await ValidateProductFormAsync(model);
+        ValidateImageUpload(model);
 
         if (!ModelState.IsValid)
         {
@@ -112,6 +125,8 @@ public class AdminProductsController : Controller
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
 
+        await AddUploadedImageAsync(product, model);
+
         if (model.QuantityOnHand > 0)
         {
             _context.StockAdjustments.Add(new StockAdjustment
@@ -124,8 +139,9 @@ public class AdminProductsController : Controller
                 CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             });
 
-            await _context.SaveChangesAsync();
         }
+
+        await _context.SaveChangesAsync();
 
         TempData["StatusMessage"] = "Product created.";
         return RedirectToAction(nameof(Index));
@@ -136,6 +152,7 @@ public class AdminProductsController : Controller
     {
         var product = await _context.Products
             .Include(item => item.InventoryItem)
+            .Include(item => item.Images)
             .FirstOrDefaultAsync(product => product.Id == id);
 
         if (product is null)
@@ -160,9 +177,11 @@ public class AdminProductsController : Controller
         }
 
         await ValidateProductFormAsync(model, id);
+        ValidateImageUpload(model);
 
         if (!ModelState.IsValid)
         {
+            model.ExistingImages = await GetImageSummariesAsync(id);
             await PopulateCategoryOptionsAsync();
             ViewData["FormTitle"] = "Edit Product";
             ViewData["SubmitLabel"] = "Save changes";
@@ -171,6 +190,7 @@ public class AdminProductsController : Controller
 
         var product = await _context.Products
             .Include(item => item.InventoryItem)
+            .Include(item => item.Images)
             .FirstOrDefaultAsync(product => product.Id == id);
 
         if (product is null)
@@ -216,9 +236,90 @@ public class AdminProductsController : Controller
             });
         }
 
+        await AddUploadedImageAsync(product, model);
         await _context.SaveChangesAsync();
 
         TempData["StatusMessage"] = "Product updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet("{id:int}/Stock")]
+    public async Task<IActionResult> Stock(int id)
+    {
+        var product = await _context.Products
+            .Include(item => item.InventoryItem)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(product => product.Id == id);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        return View(new StockAdjustmentViewModel
+        {
+            ProductId = product.Id,
+            ProductName = product.Name,
+            Sku = product.Sku,
+            CurrentQuantity = product.InventoryItem?.QuantityOnHand ?? 0
+        });
+    }
+
+    [HttpPost("{id:int}/Stock")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Stock(int id, StockAdjustmentViewModel model)
+    {
+        if (model.ProductId != id)
+        {
+            return BadRequest();
+        }
+
+        var product = await _context.Products
+            .Include(item => item.InventoryItem)
+            .FirstOrDefaultAsync(product => product.Id == id);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        var currentQuantity = product.InventoryItem?.QuantityOnHand ?? 0;
+        model.ProductName = product.Name;
+        model.Sku = product.Sku;
+        model.CurrentQuantity = currentQuantity;
+
+        if (model.QuantityDelta == 0)
+        {
+            ModelState.AddModelError(nameof(StockAdjustmentViewModel.QuantityDelta), "Enter a positive or negative quantity change.");
+        }
+
+        if (model.NewQuantity < 0)
+        {
+            ModelState.AddModelError(nameof(StockAdjustmentViewModel.QuantityDelta), "Stock cannot go below zero.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        product.InventoryItem ??= new InventoryItem { ProductId = product.Id };
+        product.InventoryItem.QuantityOnHand = model.NewQuantity;
+        product.InventoryItem.UpdatedAt = DateTimeOffset.UtcNow;
+
+        _context.StockAdjustments.Add(new StockAdjustment
+        {
+            ProductId = product.Id,
+            QuantityDelta = model.QuantityDelta,
+            QuantityAfter = model.NewQuantity,
+            Reason = model.Reason,
+            Notes = NormalizeOptional(model.Notes),
+            CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+        });
+
+        await _context.SaveChangesAsync();
+
+        TempData["StatusMessage"] = "Stock adjusted.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -254,6 +355,79 @@ public class AdminProductsController : Controller
             .ToList();
     }
 
+    private void ValidateImageUpload(ProductFormViewModel model)
+    {
+        if (model.ImageUpload is null)
+        {
+            return;
+        }
+
+        if (model.ImageUpload.Length == 0)
+        {
+            ModelState.AddModelError(nameof(ProductFormViewModel.ImageUpload), "Choose a non-empty image file.");
+            return;
+        }
+
+        if (model.ImageUpload.Length > MaxImageBytes)
+        {
+            ModelState.AddModelError(nameof(ProductFormViewModel.ImageUpload), "Image must be 4 MB or smaller.");
+        }
+
+        var extension = Path.GetExtension(model.ImageUpload.FileName);
+
+        if (!AllowedImageExtensions.Contains(extension))
+        {
+            ModelState.AddModelError(nameof(ProductFormViewModel.ImageUpload), "Use a JPG, PNG, or WEBP image.");
+        }
+    }
+
+    private async Task AddUploadedImageAsync(Product product, ProductFormViewModel model)
+    {
+        if (model.ImageUpload is null)
+        {
+            return;
+        }
+
+        var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "products", product.Id.ToString());
+        Directory.CreateDirectory(uploadsRoot);
+
+        var extension = Path.GetExtension(model.ImageUpload.FileName).ToLowerInvariant();
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+
+        await using (var stream = System.IO.File.Create(filePath))
+        {
+            await model.ImageUpload.CopyToAsync(stream);
+        }
+
+        var imagePath = $"/uploads/products/{product.Id}/{fileName}";
+        var hasPrimaryImage = product.Images.Any(image => image.IsPrimary);
+
+        product.Images.Add(new ProductImage
+        {
+            ImagePath = imagePath,
+            AltText = product.Name,
+            IsPrimary = !hasPrimaryImage,
+            SortOrder = product.Images.Count + 1
+        });
+    }
+
+    private async Task<IReadOnlyList<ProductImageSummaryViewModel>> GetImageSummariesAsync(int productId)
+    {
+        return await _context.ProductImages
+            .AsNoTracking()
+            .Where(image => image.ProductId == productId)
+            .OrderByDescending(image => image.IsPrimary)
+            .ThenBy(image => image.SortOrder)
+            .Select(image => new ProductImageSummaryViewModel
+            {
+                ImagePath = image.ImagePath,
+                AltText = image.AltText,
+                IsPrimary = image.IsPrimary
+            })
+            .ToListAsync();
+    }
+
     private async Task<string> CreateUniqueSlugAsync(string value, int? productId = null)
     {
         var baseSlug = CreateSlug(value);
@@ -287,7 +461,17 @@ public class AdminProductsController : Controller
             SalePrice = product.SalePrice,
             QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
             LowStockThreshold = product.InventoryItem?.LowStockThreshold ?? 1,
-            LocationCode = product.InventoryItem?.LocationCode
+            LocationCode = product.InventoryItem?.LocationCode,
+            ExistingImages = product.Images
+                .OrderByDescending(image => image.IsPrimary)
+                .ThenBy(image => image.SortOrder)
+                .Select(image => new ProductImageSummaryViewModel
+                {
+                    ImagePath = image.ImagePath,
+                    AltText = image.AltText,
+                    IsPrimary = image.IsPrimary
+                })
+                .ToList()
         };
     }
 

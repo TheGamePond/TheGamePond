@@ -85,7 +85,28 @@
                 <input asp-for="LocationCode" class="form-control" placeholder="Shelf, bin, case, or back room" />
                 <span asp-validation-for="LocationCode" class="text-danger"></span>
             </div>
+            <div class="col-md-12">
+                <label asp-for="ImageUpload" class="form-label"></label>
+                <input asp-for="ImageUpload" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                <span asp-validation-for="ImageUpload" class="text-danger"></span>
+            </div>
         </div>
+
+        @if (Model.ExistingImages.Count > 0)
+        {
+            <div class="existing-images">
+                @foreach (var image in Model.ExistingImages)
+                {
+                    <div>
+                        <img src="@image.ImagePath" alt="@image.AltText" />
+                        @if (image.IsPrimary)
+                        {
+                            <span>Primary</span>
+                        }
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
