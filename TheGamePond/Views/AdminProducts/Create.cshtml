@@ -1,0 +1,27 @@
+@model ProductFormViewModel
+
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Catalog management</p>
+                <h1>Create Product</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-action="Index">Back to products</a>
+        </div>
+
+        <div class="auth-panel product-form-panel">
+            <form asp-action="Create" method="post">
+                <partial name="_ProductForm" model="Model" />
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

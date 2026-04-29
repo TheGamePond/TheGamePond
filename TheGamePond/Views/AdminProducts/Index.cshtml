@@ -1,0 +1,99 @@
+@model ProductIndexViewModel
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Catalog management</p>
+                <h1>Products</h1>
+            </div>
+            <a class="btn btn-pond" asp-action="Create">Create product</a>
+        </div>
+
+        @if (TempData["StatusMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        <form method="get" class="admin-filter-bar">
+            <div>
+                <label asp-for="Search" class="form-label">Search</label>
+                <input asp-for="Search" class="form-control" placeholder="Name, SKU, barcode, platform" />
+            </div>
+            <div>
+                <label asp-for="CategoryId" class="form-label">Category</label>
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">All categories</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label asp-for="Status" class="form-label">Status</label>
+                <select asp-for="Status" asp-items="Html.GetEnumSelectList<ProductStatus>()" class="form-select">
+                    <option value="">Any status</option>
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button type="submit" class="btn btn-outline-pond">Filter</button>
+                <a class="btn btn-link" asp-action="Index">Clear</a>
+            </div>
+        </form>
+
+        <div class="admin-table-shell">
+            <table class="table align-middle admin-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Condition</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Products.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-5">No products yet.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var product in Model.Products)
+                        {
+                            var quantity = product.InventoryItem?.QuantityOnHand ?? 0;
+                            var threshold = product.InventoryItem?.LowStockThreshold ?? 0;
+                            var stockClass = quantity <= threshold ? "stock-badge stock-badge-low" : "stock-badge";
+
+                            <tr>
+                                <td>
+                                    <div class="table-title">@product.Name</div>
+                                    <div class="table-subtitle">@product.Platform</div>
+                                </td>
+                                <td>@product.Sku</td>
+                                <td>@product.Category?.Name</td>
+                                <td>@product.Condition</td>
+                                <td>@product.SalePrice.ToString("C")</td>
+                                <td><span class="@stockClass">@quantity</span></td>
+                                <td>@product.Status</td>
+                                <td class="text-end">
+                                    <a class="btn btn-outline-pond btn-sm" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
