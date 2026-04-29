@@ -1,49 +1,52 @@
-﻿@{
-    ViewData["Title"] = "TheGamePond";
+@{
+    ViewData["Title"] = "Collect. Play. Repeat.";
 }
 
-<section class="hero text-center text-light d-flex align-items-center justify-content-center">
+<section class="hero-section">
     <div class="container">
-        <h1 class="display-1 fw-bold">The Game Pond</h1>
-
-        <p class="lead mt-3">
-            Your next favorite game starts here.
-        </p>
-
-        <p class="mb-4">
-            Shop premium games, indie gems, and exclusive titles directly from The Game Pond.
-        </p>
-
-        <a href="#" class="btn btn-primary btn-lg me-2">Shop Now</a>
-        <a href="#" class="btn btn-outline-light btn-lg">Featured Games</a>
-    </div>
-</section>
-
-<section class="container py-5 text-center">
-    <h2 class="fw-bold mb-4">Why Shop With Us?</h2>
-
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <h4>Instant Access</h4>
-            <p>Buy and play your games quickly.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h4>Trusted Store</h4>
-            <p>Safe checkout and reliable service.</p>
-        </div>
-
-        <div class="col-md-4">
-            <h4>Great Titles</h4>
-            <p>Hand-picked games worth your time.</p>
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <p class="eyebrow">Gaming - TCG - Retro - Collectibles</p>
+                <h1>Enter The Pond</h1>
+                <p class="hero-copy">
+                    A custom marketplace for games, consoles, accessories, trade-ins, drops, and community finds.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a class="btn btn-pond btn-lg" href="#">Shop inventory</a>
+                    <a class="btn btn-outline-pond btn-lg" href="#">Start trade-in</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img class="hero-logo" src="~/images/brand/the-game-pond-logo.png" alt="The Game Pond mascot logo" />
+            </div>
         </div>
     </div>
 </section>
 
-<section class="bg-dark text-light py-5 text-center">
+<section class="launch-band">
     <div class="container">
-        <h2 class="fw-bold mb-3">Ready to Play?</h2>
-        <p>Browse our collection and discover something new today.</p>
-        <a href="#" class="btn btn-success btn-lg">Browse Store</a>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-tile">
+                    <span class="feature-label">Inventory</span>
+                    <h2>Real stock tracking</h2>
+                    <p>Products, SKUs, conditions, quantities, and low-stock alerts will live in the custom admin dashboard.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-tile">
+                    <span class="feature-label">Orders</span>
+                    <h2>Simple fulfillment</h2>
+                    <p>Orders move from paid to processing, packed, shipped, delivered, cancelled, or refunded.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-tile">
+                    <span class="feature-label">Trade-ins</span>
+                    <h2>Built for used games</h2>
+                    <p>Customers submit items, staff reviews conditions, and accepted trade-ins become sellable inventory.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
