@@ -20,6 +20,42 @@
                 <partial name="_ProductForm" model="Model" />
             </form>
         </div>
+
+        @if (Model.ExistingImages.Count > 0)
+        {
+            <div class="auth-panel product-image-panel">
+                <div class="product-image-panel-heading">
+                    <div>
+                        <h2>Product Images</h2>
+                        <p>Choose the storefront thumbnail and remove old uploads.</p>
+                    </div>
+                </div>
+
+                <div class="existing-images existing-images-manage">
+                    @foreach (var image in Model.ExistingImages)
+                    {
+                        <div class="existing-image-card">
+                            <img src="@image.ImagePath" alt="@image.AltText" />
+                            @if (image.IsPrimary)
+                            {
+                                <span>Primary</span>
+                            }
+                            <div class="existing-image-actions">
+                                @if (!image.IsPrimary)
+                                {
+                                    <form asp-action="SetPrimaryImage" asp-route-id="@Model.Id" asp-route-imageId="@image.Id" method="post">
+                                        <button type="submit" class="btn btn-outline-pond btn-sm">Set primary</button>
+                                    </form>
+                                }
+                                <form asp-action="DeleteImage" asp-route-id="@Model.Id" asp-route-imageId="@image.Id" method="post">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </section>
 

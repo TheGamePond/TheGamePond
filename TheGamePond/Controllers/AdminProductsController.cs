@@ -323,6 +323,84 @@ public class AdminProductsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("{id:int}/Images/{imageId:int}/Primary")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetPrimaryImage(int id, int imageId)
+    {
+        var product = await _context.Products
+            .Include(item => item.Images)
+            .FirstOrDefaultAsync(product => product.Id == id);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        var primaryImage = product.Images.FirstOrDefault(image => image.Id == imageId);
+
+        if (primaryImage is null)
+        {
+            return NotFound();
+        }
+
+        foreach (var image in product.Images)
+        {
+            image.IsPrimary = image.Id == primaryImage.Id;
+        }
+
+        product.UpdatedAt = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+
+        TempData["StatusMessage"] = "Primary image updated.";
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    [HttpPost("{id:int}/Images/{imageId:int}/Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteImage(int id, int imageId)
+    {
+        var product = await _context.Products
+            .Include(item => item.Images)
+            .FirstOrDefaultAsync(product => product.Id == id);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        var imageToDelete = product.Images.FirstOrDefault(image => image.Id == imageId);
+
+        if (imageToDelete is null)
+        {
+            return NotFound();
+        }
+
+        var deletedImagePath = imageToDelete.ImagePath;
+        var shouldPromotePrimaryImage = imageToDelete.IsPrimary;
+        _context.ProductImages.Remove(imageToDelete);
+
+        if (shouldPromotePrimaryImage)
+        {
+            var nextPrimaryImage = product.Images
+                .Where(image => image.Id != imageToDelete.Id)
+                .OrderBy(image => image.SortOrder)
+                .ThenBy(image => image.Id)
+                .FirstOrDefault();
+
+            if (nextPrimaryImage is not null)
+            {
+                nextPrimaryImage.IsPrimary = true;
+            }
+        }
+
+        product.UpdatedAt = DateTimeOffset.UtcNow;
+        await _context.SaveChangesAsync();
+        DeleteImageFileIfExists(deletedImagePath);
+
+        TempData["StatusMessage"] = "Image deleted.";
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
     private async Task ValidateProductFormAsync(ProductFormViewModel model, int? productId = null)
     {
         if (!await _context.ProductCategories.AnyAsync(category => category.Id == model.CategoryId && category.IsActive))
@@ -421,6 +499,7 @@ public class AdminProductsController : Controller
             .ThenBy(image => image.SortOrder)
             .Select(image => new ProductImageSummaryViewModel
             {
+                Id = image.Id,
                 ImagePath = image.ImagePath,
                 AltText = image.AltText,
                 IsPrimary = image.IsPrimary
@@ -467,6 +546,7 @@ public class AdminProductsController : Controller
                 .ThenBy(image => image.SortOrder)
                 .Select(image => new ProductImageSummaryViewModel
                 {
+                    Id = image.Id,
                     ImagePath = image.ImagePath,
                     AltText = image.AltText,
                     IsPrimary = image.IsPrimary
@@ -489,5 +569,38 @@ public class AdminProductsController : Controller
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private void DeleteImageFileIfExists(string imagePath)
+    {
+        if (string.IsNullOrWhiteSpace(imagePath))
+        {
+            return;
+        }
+
+        var relativePath = imagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, relativePath));
+        var webRoot = Path.GetFullPath(_environment.WebRootPath);
+
+        if (!webRoot.EndsWith(Path.DirectorySeparatorChar))
+        {
+            webRoot += Path.DirectorySeparatorChar;
+        }
+
+        if (!fullPath.StartsWith(webRoot, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+        {
+            return;
+        }
+
+        try
+        {
+            System.IO.File.Delete(fullPath);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 }

@@ -91,22 +91,6 @@
                 <span asp-validation-for="ImageUpload" class="text-danger"></span>
             </div>
         </div>
-
-        @if (Model.ExistingImages.Count > 0)
-        {
-            <div class="existing-images">
-                @foreach (var image in Model.ExistingImages)
-                {
-                    <div>
-                        <img src="@image.ImagePath" alt="@image.AltText" />
-                        @if (image.IsPrimary)
-                        {
-                            <span>Primary</span>
-                        }
-                    </div>
-                }
-            </div>
-        }
     </div>
 </div>
 
