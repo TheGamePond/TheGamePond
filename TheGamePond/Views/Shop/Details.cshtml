@@ -17,11 +17,11 @@
         }
 
         <div class="product-detail-layout">
-            <div class="product-detail-gallery">
+            <div class="product-detail-gallery" data-product-gallery>
                 <div class="product-detail-main-image">
                     @if (heroImage is not null)
                     {
-                        <img src="@heroImage.ImagePath" alt="@heroImage.AltText" />
+                        <img src="@heroImage.ImagePath" alt="@heroImage.AltText" data-product-gallery-main />
                     }
                     else
                     {
@@ -34,7 +34,16 @@
                     <div class="product-detail-thumbs">
                         @foreach (var image in Model.Images)
                         {
-                            <img src="@image.ImagePath" alt="@image.AltText" />
+                            var selectedClass = image == heroImage ? "product-detail-thumb-button active" : "product-detail-thumb-button";
+                            <button type="button"
+                                    class="@selectedClass"
+                                    data-product-gallery-thumb
+                                    data-image-src="@image.ImagePath"
+                                    data-image-alt="@image.AltText"
+                                    aria-pressed="@(image == heroImage ? "true" : "false")"
+                                    aria-label="View @Model.Name image">
+                                <img src="@image.ImagePath" alt="@image.AltText" />
+                            </button>
                         }
                     </div>
                 }

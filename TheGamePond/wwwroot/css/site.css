@@ -411,7 +411,20 @@ body {
   margin-top: 0.75rem;
 }
 
-.product-detail-thumbs img {
+.product-detail-thumb-button {
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.product-detail-thumb-button.active,
+.product-detail-thumb-button:focus {
+  border-color: var(--pond-green);
+  outline: none;
+}
+
+.product-detail-thumb-button img {
   aspect-ratio: 1;
   border: 1px solid var(--pond-border);
   border-radius: 8px;
