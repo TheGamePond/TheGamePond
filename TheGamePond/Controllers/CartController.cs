@@ -1,22 +1,22 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheGamePond.Data;
 using TheGamePond.Models.Cart;
 using TheGamePond.Models.Catalog;
+using TheGamePond.Services.Cart;
 
 namespace TheGamePond.Controllers;
 
 [Route("Cart")]
 public class CartController : Controller
 {
-    private const string CartSessionKey = "TheGamePond.Cart";
-
     private readonly ApplicationDbContext _context;
+    private readonly ICartSessionService _cartSession;
 
-    public CartController(ApplicationDbContext context)
+    public CartController(ApplicationDbContext context, ICartSessionService cartSession)
     {
         _context = context;
+        _cartSession = cartSession;
     }
 
     [HttpGet("")]
@@ -48,7 +48,7 @@ public class CartController : Controller
             return RedirectToAction("Details", "Shop", new { slug });
         }
 
-        var cart = GetCartItems();
+        var cart = _cartSession.GetItems();
         var requestedQuantity = Math.Max(1, quantity);
         var existingItem = cart.FirstOrDefault(item => item.ProductSlug == slug);
 
@@ -65,7 +65,7 @@ public class CartController : Controller
             existingItem.Quantity = Math.Min(existingItem.Quantity + requestedQuantity, availableQuantity);
         }
 
-        SaveCartItems(cart);
+        _cartSession.SaveItems(cart);
         TempData["StatusMessage"] = "Added to cart.";
 
         return RedirectToAction(nameof(Index));
@@ -75,7 +75,7 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(string slug, int quantity)
     {
-        var cart = GetCartItems();
+        var cart = _cartSession.GetItems();
         var existingItem = cart.FirstOrDefault(item => item.ProductSlug == slug);
 
         if (existingItem is null)
@@ -86,7 +86,7 @@ public class CartController : Controller
         if (quantity <= 0)
         {
             cart.Remove(existingItem);
-            SaveCartItems(cart);
+            _cartSession.SaveItems(cart);
             TempData["StatusMessage"] = "Item removed.";
             return RedirectToAction(nameof(Index));
         }
@@ -109,7 +109,7 @@ public class CartController : Controller
                 : "Cart updated to match available stock.";
         }
 
-        SaveCartItems(cart);
+        _cartSession.SaveItems(cart);
         return RedirectToAction(nameof(Index));
     }
 
@@ -117,13 +117,13 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Remove(string slug)
     {
-        var cart = GetCartItems();
+        var cart = _cartSession.GetItems();
         var existingItem = cart.FirstOrDefault(item => item.ProductSlug == slug);
 
         if (existingItem is not null)
         {
             cart.Remove(existingItem);
-            SaveCartItems(cart);
+            _cartSession.SaveItems(cart);
             TempData["StatusMessage"] = "Item removed.";
         }
 
@@ -132,7 +132,7 @@ public class CartController : Controller
 
     private async Task<CartViewModel> BuildCartViewModelAsync()
     {
-        var cart = GetCartItems();
+        var cart = _cartSession.GetItems();
 
         if (cart.Count == 0)
         {
@@ -189,7 +189,7 @@ public class CartController : Controller
 
         if (changed)
         {
-            SaveCartItems(cart);
+            _cartSession.SaveItems(cart);
         }
 
         return new CartViewModel
@@ -198,33 +198,4 @@ public class CartController : Controller
         };
     }
 
-    private List<CartSessionItem> GetCartItems()
-    {
-        var json = HttpContext.Session.GetString(CartSessionKey);
-
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return new List<CartSessionItem>();
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<List<CartSessionItem>>(json) ?? new List<CartSessionItem>();
-        }
-        catch (JsonException)
-        {
-            return new List<CartSessionItem>();
-        }
-    }
-
-    private void SaveCartItems(List<CartSessionItem> items)
-    {
-        if (items.Count == 0)
-        {
-            HttpContext.Session.Remove(CartSessionKey);
-            return;
-        }
-
-        HttpContext.Session.SetString(CartSessionKey, JsonSerializer.Serialize(items));
-    }
 }

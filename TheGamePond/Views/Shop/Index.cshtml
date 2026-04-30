@@ -77,7 +77,20 @@
                                     <span class="stock-pill stock-pill-empty">Sold out</span>
                                 }
                             </div>
-                            <a class="btn btn-pond w-100" asp-action="Details" asp-route-slug="@product.Slug">View details</a>
+                            <div class="shop-product-actions">
+                                <a class="btn btn-outline-pond" asp-action="Details" asp-route-slug="@product.Slug">Details</a>
+                                @if (product.IsInStock)
+                                {
+                                    <form asp-controller="Cart" asp-action="Add" asp-route-slug="@product.Slug" method="post">
+                                        <input type="hidden" name="quantity" value="1" />
+                                        <button type="submit" class="btn btn-pond">Add</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-outline-pond" disabled>Sold out</button>
+                                }
+                            </div>
                         </div>
                     </article>
                 }

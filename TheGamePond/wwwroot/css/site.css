@@ -77,6 +77,25 @@ body {
   color: var(--pond-dark-green);
 }
 
+.nav-cart-link {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.nav-cart-count {
+  align-items: center;
+  background: var(--pond-green);
+  border-radius: 999px;
+  color: #082238;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  justify-content: center;
+  min-width: 1.35rem;
+  padding: 0.1rem 0.4rem;
+}
+
 .btn-pond {
   --bs-btn-bg: var(--pond-green);
   --bs-btn-border-color: var(--pond-green);
@@ -298,6 +317,17 @@ body {
   gap: 0.75rem;
   justify-content: space-between;
   margin-top: auto;
+}
+
+.shop-product-actions {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.shop-product-actions form,
+.shop-product-actions .btn {
+  width: 100%;
 }
 
 .shop-product-footer strong,
