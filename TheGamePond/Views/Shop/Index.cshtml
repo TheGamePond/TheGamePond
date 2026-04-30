@@ -1,0 +1,87 @@
+@model ShopIndexViewModel
+
+@{
+    ViewData["Title"] = "Shop";
+}
+
+<section class="shop-shell">
+    <div class="container">
+        <div class="shop-heading">
+            <div>
+                <p class="eyebrow">Games - TCG - Retro - Collectibles</p>
+                <h1>Shop The Pond</h1>
+            </div>
+        </div>
+
+        <form method="get" class="shop-filter-bar">
+            <div>
+                <label asp-for="Search" class="form-label">Search</label>
+                <input asp-for="Search" class="form-control" placeholder="Pokemon, Switch, Zelda, controller" />
+            </div>
+            <div>
+                <label asp-for="Category" class="form-label">Category</label>
+                <select asp-for="Category" class="form-select">
+                    <option value="">All categories</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.Slug">@category.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="shop-filter-actions">
+                <button type="submit" class="btn btn-outline-pond">Filter</button>
+                <a class="btn btn-link" asp-action="Index">Clear</a>
+            </div>
+        </form>
+
+        @if (Model.Products.Count == 0)
+        {
+            <div class="shop-empty">
+                <h2>No products found</h2>
+                <p>Check back soon for new drops.</p>
+            </div>
+        }
+        else
+        {
+            <div class="product-grid">
+                @foreach (var product in Model.Products)
+                {
+                    <article class="shop-product-card">
+                        <a class="shop-product-image" asp-action="Details" asp-route-slug="@product.Slug">
+                            @if (product.PrimaryImagePath is not null)
+                            {
+                                <img src="@product.PrimaryImagePath" alt="@product.PrimaryImageAltText" />
+                            }
+                            else
+                            {
+                                <span>TGP</span>
+                            }
+                        </a>
+                        <div class="shop-product-body">
+                            <div class="shop-product-meta">
+                                <span>@product.CategoryName</span>
+                                <span>@product.Condition</span>
+                            </div>
+                            <h2>
+                                <a asp-action="Details" asp-route-slug="@product.Slug">@product.Name</a>
+                            </h2>
+                            <p>@product.Platform</p>
+                            <div class="shop-product-footer">
+                                <strong>@product.SalePrice.ToString("C")</strong>
+                                @if (product.IsInStock)
+                                {
+                                    <span class="stock-pill">@product.QuantityOnHand in stock</span>
+                                }
+                                else
+                                {
+                                    <span class="stock-pill stock-pill-empty">Sold out</span>
+                                }
+                            </div>
+                            <a class="btn btn-pond w-100" asp-action="Details" asp-route-slug="@product.Slug">View details</a>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>

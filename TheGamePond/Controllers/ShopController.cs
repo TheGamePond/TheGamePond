@@ -1,0 +1,134 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TheGamePond.Data;
+using TheGamePond.Models.Catalog;
+using TheGamePond.Models.Storefront;
+
+namespace TheGamePond.Controllers;
+
+[Route("Shop")]
+public class ShopController : Controller
+{
+    private readonly ApplicationDbContext _context;
+
+    public ShopController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpGet("")]
+    public async Task<IActionResult> Index(string? search, string? category)
+    {
+        var categories = await _context.ProductCategories
+            .AsNoTracking()
+            .Where(item => item.IsActive)
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.Name)
+            .ToListAsync();
+
+        var products = _context.Products
+            .Include(product => product.Category)
+            .Include(product => product.InventoryItem)
+            .Include(product => product.Images)
+            .AsNoTracking()
+            .Where(product => product.Status == ProductStatus.Active);
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var categorySlug = category.Trim();
+            products = products.Where(product => product.Category != null && product.Category.Slug == categorySlug);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchText = search.Trim();
+            products = products.Where(product =>
+                product.Name.Contains(searchText) ||
+                product.Sku.Contains(searchText) ||
+                (product.Platform != null && product.Platform.Contains(searchText)) ||
+                (product.Franchise != null && product.Franchise.Contains(searchText)));
+        }
+
+        var productList = await products
+            .OrderBy(product => product.Name)
+            .ToListAsync();
+
+        var model = new ShopIndexViewModel
+        {
+            Search = search,
+            Category = category,
+            Categories = categories,
+            Products = productList.Select(ToCardModel).ToList()
+        };
+
+        return View(model);
+    }
+
+    [HttpGet("{slug}")]
+    public async Task<IActionResult> Details(string slug)
+    {
+        var product = await _context.Products
+            .Include(item => item.Category)
+            .Include(item => item.InventoryItem)
+            .Include(item => item.Images)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(product => product.Slug == slug && product.Status == ProductStatus.Active);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        return View(ToDetailModel(product));
+    }
+
+    private static ShopProductCardViewModel ToCardModel(Product product)
+    {
+        var primaryImage = product.Images
+            .OrderByDescending(image => image.IsPrimary)
+            .ThenBy(image => image.SortOrder)
+            .FirstOrDefault();
+
+        return new ShopProductCardViewModel
+        {
+            Name = product.Name,
+            Slug = product.Slug,
+            Sku = product.Sku,
+            Platform = product.Platform,
+            Franchise = product.Franchise,
+            CategoryName = product.Category?.Name,
+            Condition = product.Condition,
+            SalePrice = product.SalePrice,
+            QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
+            PrimaryImagePath = primaryImage?.ImagePath,
+            PrimaryImageAltText = primaryImage?.AltText
+        };
+    }
+
+    private static ProductDetailViewModel ToDetailModel(Product product)
+    {
+        return new ProductDetailViewModel
+        {
+            Name = product.Name,
+            Slug = product.Slug,
+            Sku = product.Sku,
+            Description = product.Description,
+            Platform = product.Platform,
+            Franchise = product.Franchise,
+            CategoryName = product.Category?.Name,
+            Condition = product.Condition,
+            SalePrice = product.SalePrice,
+            QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
+            Images = product.Images
+                .OrderByDescending(image => image.IsPrimary)
+                .ThenBy(image => image.SortOrder)
+                .Select(image => new ShopProductImageViewModel
+                {
+                    ImagePath = image.ImagePath,
+                    AltText = image.AltText,
+                    IsPrimary = image.IsPrimary
+                })
+                .ToList()
+        };
+    }
+}
