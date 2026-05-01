@@ -1,0 +1,35 @@
+@model OrderLookupViewModel
+
+@{
+    ViewData["Title"] = "Find Your Order";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container checkout-narrow">
+        <div class="checkout-panel">
+            <p class="eyebrow">Order lookup</p>
+            <h1>Find your order</h1>
+            <p class="detail-copy">Enter the order number and email address from checkout.</p>
+
+            <form asp-action="Lookup" method="post" class="mt-4">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="OrderNumber" class="form-label"></label>
+                    <input asp-for="OrderNumber" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="OrderNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="CustomerEmail" class="form-label"></label>
+                    <input asp-for="CustomerEmail" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+                </div>
+                <button class="btn btn-pond" type="submit">View order</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

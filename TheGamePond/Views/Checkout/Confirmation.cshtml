@@ -48,7 +48,13 @@
                 </table>
             </div>
 
-            <a class="btn btn-outline-pond mt-4" asp-controller="Shop" asp-action="Index">Continue shopping</a>
+            <div class="confirmation-actions">
+                <a class="btn btn-pond"
+                   asp-controller="Orders"
+                   asp-action="Lookup"
+                   asp-route-OrderNumber="@Model.OrderNumber">Track this order</a>
+                <a class="btn btn-outline-pond" asp-controller="Shop" asp-action="Index">Continue shopping</a>
+            </div>
         </div>
     </div>
 </section>

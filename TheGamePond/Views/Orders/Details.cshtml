@@ -1,0 +1,122 @@
+@model OrderTrackingViewModel
+
+@{
+    ViewData["Title"] = $"Order {Model.OrderNumber}";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container">
+        <div class="shop-heading">
+            <div>
+                <p class="eyebrow">Order status</p>
+                <h1>@Model.OrderNumber</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-action="Lookup">Find another order</a>
+        </div>
+
+        <div class="order-tracking-layout">
+            <div class="checkout-panel">
+                <h2>Progress</h2>
+                <div class="confirmation-status order-status-grid">
+                    <div>
+                        <span>Status</span>
+                        <strong>@Model.Status</strong>
+                    </div>
+                    <div>
+                        <span>Payment</span>
+                        <strong>@Model.PaymentStatus</strong>
+                    </div>
+                    <div>
+                        <span>Tracking</span>
+                        <strong>@(Model.TrackingNumber ?? "Not set")</strong>
+                    </div>
+                    <div>
+                        <span>Total</span>
+                        <strong>@Model.Total.ToString("C")</strong>
+                    </div>
+                </div>
+
+                <div class="order-timeline mt-4">
+                    <div>
+                        <span>Placed</span>
+                        <strong>@Model.CreatedAt.LocalDateTime.ToString("g")</strong>
+                    </div>
+                    @if (Model.PaidAt.HasValue)
+                    {
+                        <div>
+                            <span>Paid</span>
+                            <strong>@Model.PaidAt.Value.LocalDateTime.ToString("g")</strong>
+                        </div>
+                    }
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <div>
+                            <span>Last update</span>
+                            <strong>@Model.UpdatedAt.Value.LocalDateTime.ToString("g")</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="checkout-panel">
+                <h2>Items</h2>
+                <div class="admin-table-shell">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.ProductName</strong>
+                                        <span class="table-subtitle d-block">SKU @item.Sku</span>
+                                    </td>
+                                    <td>@item.Quantity</td>
+                                    <td class="text-end">@item.LineTotal.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkout-panel mt-4">
+            <h2>Status history</h2>
+            <div class="admin-table-shell">
+                <table class="table admin-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>From</th>
+                            <th>To</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.StatusHistory.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="empty-state">No status updates have been posted yet.</td>
+                            </tr>
+                        }
+                        @foreach (var history in Model.StatusHistory)
+                        {
+                            <tr>
+                                <td>@history.CreatedAt.LocalDateTime.ToString("g")</td>
+                                <td>@history.FromStatus</td>
+                                <td>@history.ToStatus</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
