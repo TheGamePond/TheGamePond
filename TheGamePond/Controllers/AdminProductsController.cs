@@ -1,9 +1,8 @@
-using System.Security.Claims;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using TheGamePond.Data;
 using TheGamePond.Models.Admin;
 using TheGamePond.Models.Catalog;
@@ -14,75 +13,59 @@ namespace TheGamePond.Controllers;
 [Route("Admin/Products")]
 public class AdminProductsController : Controller
 {
-    private const long MaxImageBytes = 4 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> AllowedImageTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp"
+        "image/jpeg",
+        "image/png",
+        "image/webp"
     };
 
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _dbContext;
     private readonly IWebHostEnvironment _environment;
 
-    public AdminProductsController(ApplicationDbContext context, IWebHostEnvironment environment)
+    public AdminProductsController(ApplicationDbContext dbContext, IWebHostEnvironment environment)
     {
-        _context = context;
+        _dbContext = dbContext;
         _environment = environment;
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(string? search, int? categoryId, ProductStatus? status)
+    public async Task<IActionResult> Index(string? search = null, bool lowStock = false)
     {
-        var products = _context.Products
+        var productsQuery = _dbContext.Products
+            .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.InventoryItem)
             .Include(product => product.Images)
-            .AsNoTracking();
+            .OrderBy(product => product.Name)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var searchText = search.Trim();
-            products = products.Where(product =>
-                product.Name.Contains(searchText) ||
-                product.Sku.Contains(searchText) ||
-                (product.Barcode != null && product.Barcode.Contains(searchText)) ||
-                (product.Platform != null && product.Platform.Contains(searchText)));
+            var trimmedSearch = search.Trim();
+            productsQuery = productsQuery.Where(product =>
+                product.Name.Contains(trimmedSearch) ||
+                product.Sku.Contains(trimmedSearch) ||
+                (product.Barcode != null && product.Barcode.Contains(trimmedSearch)));
         }
 
-        if (categoryId.HasValue)
+        if (lowStock)
         {
-            products = products.Where(product => product.CategoryId == categoryId.Value);
+            productsQuery = productsQuery.Where(product =>
+                product.InventoryItem != null &&
+                product.InventoryItem.QuantityOnHand <= product.InventoryItem.LowStockThreshold);
         }
 
-        if (status.HasValue)
-        {
-            products = products.Where(product => product.Status == status.Value);
-        }
+        ViewData["Search"] = search;
+        ViewData["LowStock"] = lowStock;
 
-        var model = new ProductIndexViewModel
-        {
-            Search = search,
-            CategoryId = categoryId,
-            Status = status,
-            Categories = await GetActiveCategoriesAsync(),
-            Products = await products
-                .OrderBy(product => product.Name)
-                .ToListAsync()
-        };
-
-        return View(model);
+        return View(await productsQuery.ToListAsync());
     }
 
     [HttpGet("Create")]
     public async Task<IActionResult> Create()
     {
-        await PopulateCategoryOptionsAsync();
-        ViewData["FormTitle"] = "Create Product";
-        ViewData["SubmitLabel"] = "Create product";
-
-        return View(new ProductFormViewModel());
+        return View(await BuildFormViewModelAsync(new ProductFormViewModel()));
     }
 
     [HttpPost("Create")]
@@ -90,517 +73,298 @@ public class AdminProductsController : Controller
     public async Task<IActionResult> Create(ProductFormViewModel model)
     {
         await ValidateProductFormAsync(model);
-        ValidateImageUpload(model);
 
         if (!ModelState.IsValid)
         {
-            await PopulateCategoryOptionsAsync();
-            ViewData["FormTitle"] = "Create Product";
-            ViewData["SubmitLabel"] = "Create product";
-            return View(model);
+            return View(await BuildFormViewModelAsync(model));
         }
 
         var product = new Product
         {
             Name = model.Name.Trim(),
-            Slug = await CreateUniqueSlugAsync(model.Name),
-            Description = model.Description?.Trim(),
-            Sku = NormalizeSku(model.Sku),
+            Sku = model.Sku.Trim(),
             Barcode = NormalizeOptional(model.Barcode),
-            Platform = NormalizeOptional(model.Platform),
-            Franchise = NormalizeOptional(model.Franchise),
-            CategoryId = model.CategoryId,
-            Condition = model.Condition,
-            Status = model.Status,
+            Platform = model.Platform.Trim(),
+            Condition = model.Condition.Trim(),
+            Description = NormalizeOptional(model.Description),
+            ProductCategoryId = model.ProductCategoryId,
             CostPrice = model.CostPrice,
             SalePrice = model.SalePrice,
+            IsActive = model.IsActive,
             InventoryItem = new InventoryItem
             {
                 QuantityOnHand = model.QuantityOnHand,
-                LowStockThreshold = model.LowStockThreshold,
-                LocationCode = NormalizeOptional(model.LocationCode)
+                LowStockThreshold = model.LowStockThreshold
             }
         };
 
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
+        _dbContext.Products.Add(product);
+        await _dbContext.SaveChangesAsync();
 
-        await AddUploadedImageAsync(product, model);
+        if (model.ImageUpload is not null)
+        {
+            var imagePath = await SaveProductImageAsync(model.ImageUpload);
+            _dbContext.ProductImages.Add(new ProductImage
+            {
+                ProductId = product.Id,
+                FilePath = imagePath,
+                AltText = product.Name,
+                IsPrimary = true
+            });
+        }
 
         if (model.QuantityOnHand > 0)
         {
-            _context.StockAdjustments.Add(new StockAdjustment
+            _dbContext.StockAdjustments.Add(new StockAdjustment
             {
                 ProductId = product.Id,
-                QuantityDelta = model.QuantityOnHand,
+                QuantityChange = model.QuantityOnHand,
                 QuantityAfter = model.QuantityOnHand,
-                Reason = StockAdjustmentReason.InitialStock,
-                Notes = "Initial product creation stock.",
-                CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                Reason = "Initial stock",
+                AdjustedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             });
-
         }
 
-        await _context.SaveChangesAsync();
-
+        await _dbContext.SaveChangesAsync();
         TempData["StatusMessage"] = "Product created.";
+
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet("{id:int}/Edit")]
-    public async Task<IActionResult> Edit(int id)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Details(int id)
     {
-        var product = await _context.Products
+        var product = await _dbContext.Products
+            .AsNoTracking()
+            .Include(item => item.Category)
             .Include(item => item.InventoryItem)
             .Include(item => item.Images)
-            .FirstOrDefaultAsync(product => product.Id == id);
+            .Include(item => item.StockAdjustments.OrderByDescending(adjustment => adjustment.CreatedAt))
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (product is null)
         {
             return NotFound();
         }
 
-        await PopulateCategoryOptionsAsync();
-        ViewData["FormTitle"] = "Edit Product";
-        ViewData["SubmitLabel"] = "Save changes";
+        return View(product);
+    }
 
-        return View(ToFormModel(product));
+    [HttpGet("{id:int}/Edit")]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var product = await _dbContext.Products
+            .Include(item => item.InventoryItem)
+            .Include(item => item.Images)
+            .FirstOrDefaultAsync(item => item.Id == id);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        var model = new ProductFormViewModel
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Sku = product.Sku,
+            Barcode = product.Barcode,
+            Platform = product.Platform,
+            Condition = product.Condition,
+            Description = product.Description,
+            ProductCategoryId = product.ProductCategoryId,
+            CostPrice = product.CostPrice,
+            SalePrice = product.SalePrice,
+            QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
+            LowStockThreshold = product.InventoryItem?.LowStockThreshold ?? 1,
+            IsActive = product.IsActive,
+            ExistingImagePath = product.Images.FirstOrDefault(image => image.IsPrimary)?.FilePath
+        };
+
+        return View(await BuildFormViewModelAsync(model));
     }
 
     [HttpPost("{id:int}/Edit")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, ProductFormViewModel model)
     {
-        if (model.Id != id)
+        if (id != model.Id)
         {
             return BadRequest();
         }
 
-        await ValidateProductFormAsync(model, id);
-        ValidateImageUpload(model);
+        await ValidateProductFormAsync(model);
 
         if (!ModelState.IsValid)
         {
-            model.ExistingImages = await GetImageSummariesAsync(id);
-            await PopulateCategoryOptionsAsync();
-            ViewData["FormTitle"] = "Edit Product";
-            ViewData["SubmitLabel"] = "Save changes";
-            return View(model);
+            return View(await BuildFormViewModelAsync(model));
         }
 
-        var product = await _context.Products
+        var product = await _dbContext.Products
             .Include(item => item.InventoryItem)
             .Include(item => item.Images)
-            .FirstOrDefaultAsync(product => product.Id == id);
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (product is null)
         {
             return NotFound();
         }
 
-        var oldQuantity = product.InventoryItem?.QuantityOnHand ?? 0;
-        var newQuantity = model.QuantityOnHand;
-
         product.Name = model.Name.Trim();
-        product.Slug = await CreateUniqueSlugAsync(model.Name, id);
-        product.Description = model.Description?.Trim();
-        product.Sku = NormalizeSku(model.Sku);
+        product.Sku = model.Sku.Trim();
         product.Barcode = NormalizeOptional(model.Barcode);
-        product.Platform = NormalizeOptional(model.Platform);
-        product.Franchise = NormalizeOptional(model.Franchise);
-        product.CategoryId = model.CategoryId;
-        product.Condition = model.Condition;
-        product.Status = model.Status;
+        product.Platform = model.Platform.Trim();
+        product.Condition = model.Condition.Trim();
+        product.Description = NormalizeOptional(model.Description);
+        product.ProductCategoryId = model.ProductCategoryId;
         product.CostPrice = model.CostPrice;
         product.SalePrice = model.SalePrice;
+        product.IsActive = model.IsActive;
         product.UpdatedAt = DateTimeOffset.UtcNow;
 
         product.InventoryItem ??= new InventoryItem { ProductId = product.Id };
-        product.InventoryItem.QuantityOnHand = newQuantity;
+        var originalQuantity = product.InventoryItem.QuantityOnHand;
+        product.InventoryItem.QuantityOnHand = model.QuantityOnHand;
         product.InventoryItem.LowStockThreshold = model.LowStockThreshold;
-        product.InventoryItem.LocationCode = NormalizeOptional(model.LocationCode);
         product.InventoryItem.UpdatedAt = DateTimeOffset.UtcNow;
 
-        var quantityDelta = newQuantity - oldQuantity;
-
-        if (quantityDelta != 0)
+        if (originalQuantity != model.QuantityOnHand)
         {
-            _context.StockAdjustments.Add(new StockAdjustment
+            _dbContext.StockAdjustments.Add(new StockAdjustment
             {
                 ProductId = product.Id,
-                QuantityDelta = quantityDelta,
-                QuantityAfter = newQuantity,
-                Reason = StockAdjustmentReason.Correction,
-                Notes = "Admin product edit quantity adjustment.",
-                CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                QuantityChange = model.QuantityOnHand - originalQuantity,
+                QuantityAfter = model.QuantityOnHand,
+                Reason = "Manual count update",
+                AdjustedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             });
         }
 
-        await AddUploadedImageAsync(product, model);
-        await _context.SaveChangesAsync();
-
-        TempData["StatusMessage"] = "Product updated.";
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpGet("{id:int}/Stock")]
-    public async Task<IActionResult> Stock(int id)
-    {
-        var product = await _context.Products
-            .Include(item => item.InventoryItem)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(product => product.Id == id);
-
-        if (product is null)
+        if (model.ImageUpload is not null)
         {
-            return NotFound();
+            var imagePath = await SaveProductImageAsync(model.ImageUpload);
+            foreach (var existingImage in product.Images)
+            {
+                existingImage.IsPrimary = false;
+            }
+
+            _dbContext.ProductImages.Add(new ProductImage
+            {
+                ProductId = product.Id,
+                FilePath = imagePath,
+                AltText = product.Name,
+                IsPrimary = true
+            });
         }
 
-        return View(new StockAdjustmentViewModel
-        {
-            ProductId = product.Id,
-            ProductName = product.Name,
-            Sku = product.Sku,
-            CurrentQuantity = product.InventoryItem?.QuantityOnHand ?? 0
-        });
+        await _dbContext.SaveChangesAsync();
+        TempData["StatusMessage"] = "Product updated.";
+
+        return RedirectToAction(nameof(Details), new { id = product.Id });
     }
 
-    [HttpPost("{id:int}/Stock")]
+    [HttpPost("{id:int}/AdjustStock")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Stock(int id, StockAdjustmentViewModel model)
+    public async Task<IActionResult> AdjustStock(int id, StockAdjustmentViewModel model)
     {
-        if (model.ProductId != id)
+        if (id != model.ProductId)
         {
             return BadRequest();
         }
 
-        var product = await _context.Products
+        if (model.QuantityChange == 0)
+        {
+            ModelState.AddModelError(nameof(model.QuantityChange), "Enter a non-zero stock change.");
+        }
+
+        var product = await _dbContext.Products
             .Include(item => item.InventoryItem)
-            .FirstOrDefaultAsync(product => product.Id == id);
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (product is null)
         {
             return NotFound();
-        }
-
-        var currentQuantity = product.InventoryItem?.QuantityOnHand ?? 0;
-        model.ProductName = product.Name;
-        model.Sku = product.Sku;
-        model.CurrentQuantity = currentQuantity;
-
-        if (model.QuantityDelta == 0)
-        {
-            ModelState.AddModelError(nameof(StockAdjustmentViewModel.QuantityDelta), "Enter a positive or negative quantity change.");
-        }
-
-        if (model.NewQuantity < 0)
-        {
-            ModelState.AddModelError(nameof(StockAdjustmentViewModel.QuantityDelta), "Stock cannot go below zero.");
         }
 
         if (!ModelState.IsValid)
         {
-            return View(model);
+            TempData["StatusMessage"] = "Stock adjustment was not saved. Check the quantity and reason.";
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         product.InventoryItem ??= new InventoryItem { ProductId = product.Id };
-        product.InventoryItem.QuantityOnHand = model.NewQuantity;
-        product.InventoryItem.UpdatedAt = DateTimeOffset.UtcNow;
+        var adjustedQuantity = product.InventoryItem.QuantityOnHand + model.QuantityChange;
 
-        _context.StockAdjustments.Add(new StockAdjustment
+        if (adjustedQuantity < 0)
+        {
+            TempData["StatusMessage"] = "Stock cannot be adjusted below zero.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        product.InventoryItem.QuantityOnHand = adjustedQuantity;
+        product.InventoryItem.UpdatedAt = DateTimeOffset.UtcNow;
+        product.UpdatedAt = DateTimeOffset.UtcNow;
+
+        _dbContext.StockAdjustments.Add(new StockAdjustment
         {
             ProductId = product.Id,
-            QuantityDelta = model.QuantityDelta,
-            QuantityAfter = model.NewQuantity,
-            Reason = model.Reason,
-            Notes = NormalizeOptional(model.Notes),
-            CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            QuantityChange = model.QuantityChange,
+            QuantityAfter = adjustedQuantity,
+            Reason = model.Reason.Trim(),
+            AdjustedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
         });
 
-        await _context.SaveChangesAsync();
-
+        await _dbContext.SaveChangesAsync();
         TempData["StatusMessage"] = "Stock adjusted.";
-        return RedirectToAction(nameof(Index));
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
-    [HttpPost("{id:int}/Images/{imageId:int}/Primary")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetPrimaryImage(int id, int imageId)
+    private async Task<ProductFormViewModel> BuildFormViewModelAsync(ProductFormViewModel model)
     {
-        var product = await _context.Products
-            .Include(item => item.Images)
-            .FirstOrDefaultAsync(product => product.Id == id);
-
-        if (product is null)
-        {
-            return NotFound();
-        }
-
-        var primaryImage = product.Images.FirstOrDefault(image => image.Id == imageId);
-
-        if (primaryImage is null)
-        {
-            return NotFound();
-        }
-
-        foreach (var image in product.Images)
-        {
-            image.IsPrimary = image.Id == primaryImage.Id;
-        }
-
-        product.UpdatedAt = DateTimeOffset.UtcNow;
-        await _context.SaveChangesAsync();
-
-        TempData["StatusMessage"] = "Primary image updated.";
-        return RedirectToAction(nameof(Edit), new { id });
-    }
-
-    [HttpPost("{id:int}/Images/{imageId:int}/Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteImage(int id, int imageId)
-    {
-        var product = await _context.Products
-            .Include(item => item.Images)
-            .FirstOrDefaultAsync(product => product.Id == id);
-
-        if (product is null)
-        {
-            return NotFound();
-        }
-
-        var imageToDelete = product.Images.FirstOrDefault(image => image.Id == imageId);
-
-        if (imageToDelete is null)
-        {
-            return NotFound();
-        }
-
-        var deletedImagePath = imageToDelete.ImagePath;
-        var shouldPromotePrimaryImage = imageToDelete.IsPrimary;
-        _context.ProductImages.Remove(imageToDelete);
-
-        if (shouldPromotePrimaryImage)
-        {
-            var nextPrimaryImage = product.Images
-                .Where(image => image.Id != imageToDelete.Id)
-                .OrderBy(image => image.SortOrder)
-                .ThenBy(image => image.Id)
-                .FirstOrDefault();
-
-            if (nextPrimaryImage is not null)
-            {
-                nextPrimaryImage.IsPrimary = true;
-            }
-        }
-
-        product.UpdatedAt = DateTimeOffset.UtcNow;
-        await _context.SaveChangesAsync();
-        DeleteImageFileIfExists(deletedImagePath);
-
-        TempData["StatusMessage"] = "Image deleted.";
-        return RedirectToAction(nameof(Edit), new { id });
-    }
-
-    private async Task ValidateProductFormAsync(ProductFormViewModel model, int? productId = null)
-    {
-        if (!await _context.ProductCategories.AnyAsync(category => category.Id == model.CategoryId && category.IsActive))
-        {
-            ModelState.AddModelError(nameof(ProductFormViewModel.CategoryId), "Choose an active category.");
-        }
-
-        var sku = NormalizeSku(model.Sku);
-
-        if (await _context.Products.AnyAsync(product => product.Sku == sku && product.Id != productId))
-        {
-            ModelState.AddModelError(nameof(ProductFormViewModel.Sku), "That SKU is already in use.");
-        }
-    }
-
-    private async Task<IReadOnlyList<ProductCategory>> GetActiveCategoriesAsync()
-    {
-        return await _context.ProductCategories
+        model.Categories = await _dbContext.ProductCategories
             .AsNoTracking()
             .Where(category => category.IsActive)
-            .OrderBy(category => category.SortOrder)
-            .ThenBy(category => category.Name)
-            .ToListAsync();
-    }
-
-    private async Task PopulateCategoryOptionsAsync()
-    {
-        ViewBag.CategoryOptions = (await GetActiveCategoriesAsync())
+            .OrderBy(category => category.Name)
             .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
-            .ToList();
+            .ToListAsync();
+
+        return model;
     }
 
-    private void ValidateImageUpload(ProductFormViewModel model)
+    private async Task ValidateProductFormAsync(ProductFormViewModel model)
     {
-        if (model.ImageUpload is null)
+        if (model.ImageUpload is not null && !AllowedImageTypes.Contains(model.ImageUpload.ContentType))
         {
-            return;
+            ModelState.AddModelError(nameof(model.ImageUpload), "Upload a JPG, PNG, or WebP image.");
         }
 
-        if (model.ImageUpload.Length == 0)
-        {
-            ModelState.AddModelError(nameof(ProductFormViewModel.ImageUpload), "Choose a non-empty image file.");
-            return;
-        }
+        var skuExists = await _dbContext.Products
+            .AnyAsync(product => product.Sku == (model.Sku ?? string.Empty).Trim() && product.Id != model.Id);
 
-        if (model.ImageUpload.Length > MaxImageBytes)
+        if (skuExists)
         {
-            ModelState.AddModelError(nameof(ProductFormViewModel.ImageUpload), "Image must be 4 MB or smaller.");
-        }
-
-        var extension = Path.GetExtension(model.ImageUpload.FileName);
-
-        if (!AllowedImageExtensions.Contains(extension))
-        {
-            ModelState.AddModelError(nameof(ProductFormViewModel.ImageUpload), "Use a JPG, PNG, or WEBP image.");
+            ModelState.AddModelError(nameof(model.Sku), "SKU must be unique.");
         }
     }
 
-    private async Task AddUploadedImageAsync(Product product, ProductFormViewModel model)
+    private async Task<string> SaveProductImageAsync(IFormFile upload)
     {
-        if (model.ImageUpload is null)
-        {
-            return;
-        }
-
-        var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "products", product.Id.ToString());
+        var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "products");
         Directory.CreateDirectory(uploadsRoot);
 
-        var extension = Path.GetExtension(model.ImageUpload.FileName).ToLowerInvariant();
+        var extension = Path.GetExtension(upload.FileName).ToLowerInvariant();
         var fileName = $"{Guid.NewGuid():N}{extension}";
-        var filePath = Path.Combine(uploadsRoot, fileName);
+        var absolutePath = Path.Combine(uploadsRoot, fileName);
 
-        await using (var stream = System.IO.File.Create(filePath))
-        {
-            await model.ImageUpload.CopyToAsync(stream);
-        }
+        await using var stream = System.IO.File.Create(absolutePath);
+        await upload.CopyToAsync(stream);
 
-        var imagePath = $"/uploads/products/{product.Id}/{fileName}";
-        var hasPrimaryImage = product.Images.Any(image => image.IsPrimary);
-
-        product.Images.Add(new ProductImage
-        {
-            ImagePath = imagePath,
-            AltText = product.Name,
-            IsPrimary = !hasPrimaryImage,
-            SortOrder = product.Images.Count + 1
-        });
-    }
-
-    private async Task<IReadOnlyList<ProductImageSummaryViewModel>> GetImageSummariesAsync(int productId)
-    {
-        return await _context.ProductImages
-            .AsNoTracking()
-            .Where(image => image.ProductId == productId)
-            .OrderByDescending(image => image.IsPrimary)
-            .ThenBy(image => image.SortOrder)
-            .Select(image => new ProductImageSummaryViewModel
-            {
-                Id = image.Id,
-                ImagePath = image.ImagePath,
-                AltText = image.AltText,
-                IsPrimary = image.IsPrimary
-            })
-            .ToListAsync();
-    }
-
-    private async Task<string> CreateUniqueSlugAsync(string value, int? productId = null)
-    {
-        var baseSlug = CreateSlug(value);
-        var slug = baseSlug;
-        var suffix = 2;
-
-        while (await _context.Products.AnyAsync(product => product.Slug == slug && product.Id != productId))
-        {
-            slug = $"{baseSlug}-{suffix}";
-            suffix++;
-        }
-
-        return slug;
-    }
-
-    private static ProductFormViewModel ToFormModel(Product product)
-    {
-        return new ProductFormViewModel
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Description = product.Description,
-            Sku = product.Sku,
-            Barcode = product.Barcode,
-            Platform = product.Platform,
-            Franchise = product.Franchise,
-            CategoryId = product.CategoryId,
-            Condition = product.Condition,
-            Status = product.Status,
-            CostPrice = product.CostPrice,
-            SalePrice = product.SalePrice,
-            QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
-            LowStockThreshold = product.InventoryItem?.LowStockThreshold ?? 1,
-            LocationCode = product.InventoryItem?.LocationCode,
-            ExistingImages = product.Images
-                .OrderByDescending(image => image.IsPrimary)
-                .ThenBy(image => image.SortOrder)
-                .Select(image => new ProductImageSummaryViewModel
-                {
-                    Id = image.Id,
-                    ImagePath = image.ImagePath,
-                    AltText = image.AltText,
-                    IsPrimary = image.IsPrimary
-                })
-                .ToList()
-        };
-    }
-
-    private static string CreateSlug(string value)
-    {
-        var slug = Regex.Replace(value.Trim().ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
-        return string.IsNullOrWhiteSpace(slug) ? "product" : slug;
-    }
-
-    private static string NormalizeSku(string value)
-    {
-        return value.Trim().ToUpperInvariant();
+        return $"/uploads/products/{fileName}";
     }
 
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    private void DeleteImageFileIfExists(string imagePath)
-    {
-        if (string.IsNullOrWhiteSpace(imagePath))
-        {
-            return;
-        }
-
-        var relativePath = imagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var fullPath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, relativePath));
-        var webRoot = Path.GetFullPath(_environment.WebRootPath);
-
-        if (!webRoot.EndsWith(Path.DirectorySeparatorChar))
-        {
-            webRoot += Path.DirectorySeparatorChar;
-        }
-
-        if (!fullPath.StartsWith(webRoot, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
-        {
-            return;
-        }
-
-        try
-        {
-            System.IO.File.Delete(fullPath);
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
     }
 }

@@ -11,26 +11,7 @@
                 <p class="eyebrow">The Game Pond operations</p>
                 <h1>Admin Dashboard</h1>
             </div>
-            <span class="admin-status">Sprint 1 inventory</span>
-        </div>
-
-        <div class="admin-metrics">
-            <div class="metric-tile">
-                <span>Products</span>
-                <strong>@Model.ProductCount</strong>
-            </div>
-            <div class="metric-tile">
-                <span>Active</span>
-                <strong>@Model.ActiveProductCount</strong>
-            </div>
-            <div class="metric-tile metric-warning">
-                <span>Low stock</span>
-                <strong>@Model.LowStockCount</strong>
-            </div>
-            <div class="metric-tile">
-                <span>Drafts</span>
-                <strong>@Model.DraftProductCount</strong>
-            </div>
+            <span class="admin-status">Sprint 1 catalog</span>
         </div>
 
         <div class="row g-4">
@@ -38,22 +19,23 @@
                 <div class="admin-tile">
                     <span class="feature-label">Inventory</span>
                     <h2>Products and stock</h2>
-                    <p>Manage catalog entries, SKU, condition, quantity, and low-stock thresholds.</p>
+                    <p>Manage catalog records, SKU and barcode fields, product images, stock counts, and low-stock thresholds.</p>
                     <a class="tile-link" asp-controller="AdminProducts" asp-action="Index">Open products</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="admin-tile">
+                    <span class="feature-label">Categories</span>
+                    <h2>Shop organization</h2>
+                    <p>Maintain the category list used by admin product entry and future storefront filters.</p>
+                    <a class="tile-link" asp-controller="AdminCategories" asp-action="Index">Open categories</a>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="admin-tile">
                     <span class="feature-label">Orders</span>
                     <h2>Fulfillment queue</h2>
-                    <p>Prepared for paid, processing, packed, shipped, cancelled, and refunded states.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="admin-tile">
-                    <span class="feature-label">Team</span>
-                    <h2>Role-based access</h2>
-                    <p>Owner, Admin, and Staff roles are seeded through ASP.NET Core Identity.</p>
+                    <p>Prepared for paid, processing, packed, shipped, cancelled, and refunded states in Sprint 4.</p>
                 </div>
             </div>
         </div>

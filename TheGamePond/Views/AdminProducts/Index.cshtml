@@ -1,115 +1,90 @@
-@model ProductIndexViewModel
+@model IReadOnlyList<TheGamePond.Models.Catalog.Product>
 
 @{
     ViewData["Title"] = "Products";
+    var search = ViewData["Search"] as string;
+    var lowStock = ViewData["LowStock"] as bool? ?? false;
 }
 
 <section class="admin-shell">
     <div class="container">
         <div class="admin-heading">
             <div>
-                <p class="eyebrow">Catalog management</p>
+                <p class="eyebrow">Catalog operations</p>
                 <h1>Products</h1>
             </div>
-            <a class="btn btn-pond" asp-action="Create">Create product</a>
+            <a class="btn btn-pond" asp-action="Create">Add product</a>
         </div>
 
-        @if (TempData["StatusMessage"] is string message)
+        @if (TempData["StatusMessage"] is string statusMessage)
         {
-            <div class="alert alert-success">@message</div>
+            <div class="alert alert-success" role="alert">@statusMessage</div>
         }
 
-        <form method="get" class="admin-filter-bar">
-            <div>
-                <label asp-for="Search" class="form-label">Search</label>
-                <input asp-for="Search" class="form-control" placeholder="Name, SKU, barcode, platform" />
-            </div>
-            <div>
-                <label asp-for="CategoryId" class="form-label">Category</label>
-                <select asp-for="CategoryId" class="form-select">
-                    <option value="">All categories</option>
-                    @foreach (var category in Model.Categories)
-                    {
-                        <option value="@category.Id">@category.Name</option>
-                    }
-                </select>
-            </div>
-            <div>
-                <label asp-for="Status" class="form-label">Status</label>
-                <select asp-for="Status" asp-items="Html.GetEnumSelectList<ProductStatus>()" class="form-select">
-                    <option value="">Any status</option>
-                </select>
-            </div>
-            <div class="admin-filter-actions">
-                <button type="submit" class="btn btn-outline-pond">Filter</button>
-                <a class="btn btn-link" asp-action="Index">Clear</a>
-            </div>
+        <form class="admin-filter" method="get">
+            <input class="form-control" type="search" name="search" value="@search" placeholder="Search name, SKU, or barcode" />
+            <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="lowStock" value="true" checked="@lowStock" />
+                <span class="form-check-label">Low stock only</span>
+            </label>
+            <button class="btn btn-outline-pond" type="submit">Filter</button>
         </form>
 
-        <div class="admin-table-shell">
-            <table class="table align-middle admin-table">
+        <div class="admin-table-wrap">
+            <table class="table admin-table align-middle">
                 <thead>
                     <tr>
                         <th>Product</th>
-                        <th>SKU</th>
                         <th>Category</th>
-                        <th>Condition</th>
+                        <th>SKU</th>
                         <th>Price</th>
                         <th>Stock</th>
                         <th>Status</th>
-                        <th></th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Products.Count == 0)
+                    @if (Model.Count == 0)
                     {
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-5">No products yet.</td>
+                            <td colspan="7" class="empty-state">No products match the current filter.</td>
                         </tr>
                     }
-                    else
+                    @foreach (var product in Model)
                     {
-                        @foreach (var product in Model.Products)
-                        {
-                            var quantity = product.InventoryItem?.QuantityOnHand ?? 0;
-                            var threshold = product.InventoryItem?.LowStockThreshold ?? 0;
-                            var stockClass = quantity <= threshold ? "stock-badge stock-badge-low" : "stock-badge";
-                            var primaryImage = product.Images
-                                .OrderByDescending(image => image.IsPrimary)
-                                .ThenBy(image => image.SortOrder)
-                                .FirstOrDefault();
+                        var image = product.Images.FirstOrDefault(image => image.IsPrimary) ?? product.Images.FirstOrDefault();
+                        var quantity = product.InventoryItem?.QuantityOnHand ?? 0;
+                        var threshold = product.InventoryItem?.LowStockThreshold ?? 0;
+                        var isLowStock = quantity <= threshold;
 
-                            <tr>
-                                <td>
-                                    <div class="product-cell">
-                                        @if (primaryImage is not null)
-                                        {
-                                            <img src="@primaryImage.ImagePath" alt="@primaryImage.AltText" />
-                                        }
-                                        else
-                                        {
-                                            <span class="product-thumb-placeholder">TGP</span>
-                                        }
-                                        <div>
-                                            <div class="table-title">@product.Name</div>
-                                            <div class="table-subtitle">@product.Platform</div>
-                                        </div>
+                        <tr>
+                            <td>
+                                <div class="product-cell">
+                                    @if (image is not null)
+                                    {
+                                        <img src="@image.FilePath" alt="@image.AltText" />
+                                    }
+                                    else
+                                    {
+                                        <span class="product-thumb-placeholder">TGP</span>
+                                    }
+                                    <div>
+                                        <strong>@product.Name</strong>
+                                        <span>@product.Platform / @product.Condition</span>
                                     </div>
-                                </td>
-                                <td>@product.Sku</td>
-                                <td>@product.Category?.Name</td>
-                                <td>@product.Condition</td>
-                                <td>@product.SalePrice.ToString("C")</td>
-                                <td><span class="@stockClass">@quantity</span></td>
-                                <td>@product.Status</td>
-                                <td class="text-end">
-                                    <div class="table-actions">
-                                        <a class="btn btn-outline-pond btn-sm" asp-action="Stock" asp-route-id="@product.Id">Stock</a>
-                                        <a class="btn btn-outline-pond btn-sm" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                                </div>
+                            </td>
+                            <td>@product.Category?.Name</td>
+                            <td>@product.Sku</td>
+                            <td>@product.SalePrice.ToString("C")</td>
+                            <td>
+                                <span class="stock-pill @(isLowStock ? "stock-low" : "stock-ok")">@quantity</span>
+                            </td>
+                            <td>@(product.IsActive ? "Active" : "Hidden")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-pond" asp-action="Details" asp-route-id="@product.Id">Open</a>
+                            </td>
+                        </tr>
                     }
                 </tbody>
             </table>
