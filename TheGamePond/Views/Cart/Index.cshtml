@@ -1,0 +1,98 @@
+@model CartViewModel
+
+@{
+    ViewData["Title"] = "Cart";
+    ViewData["MetaDescription"] = "Review your selected Game Pond items before checkout.";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container">
+        <div class="shop-heading">
+            <div>
+                <p class="eyebrow">Checkout path</p>
+                <h1>Your Cart</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-controller="Shop" asp-action="Index">Continue shopping</a>
+        </div>
+
+        @if (TempData["StatusMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        @if (Model.IsEmpty)
+        {
+            <div class="shop-empty">
+                <h2>Your cart is empty</h2>
+                <p>Find something good in the pond.</p>
+            </div>
+        }
+        else
+        {
+            <div class="cart-layout">
+                <div class="cart-items">
+                    @foreach (var item in Model.Items)
+                    {
+                        <article class="cart-item">
+                            <a class="cart-item-image" asp-controller="Shop" asp-action="Details" asp-route-slug="@item.ProductSlug">
+                                @if (item.ImagePath is not null)
+                                {
+                                    <img src="@item.ImagePath" alt="@item.ImageAltText" />
+                                }
+                                else
+                                {
+                                    <span>TGP</span>
+                                }
+                            </a>
+
+                            <div class="cart-item-body">
+                                <div>
+                                    <h2>
+                                        <a asp-controller="Shop" asp-action="Details" asp-route-slug="@item.ProductSlug">@item.Name</a>
+                                    </h2>
+                                    <p>@item.Platform</p>
+                                    <span class="table-subtitle">SKU @item.Sku</span>
+                                </div>
+
+                                <div class="cart-item-controls">
+                                    <form asp-action="Update" method="post" class="cart-quantity-form">
+                                        <input type="hidden" name="slug" value="@item.ProductSlug" />
+                                        <label class="form-label" for="quantity-@item.ProductSlug">Qty</label>
+                                        <input id="quantity-@item.ProductSlug" class="form-control" type="number" name="quantity" min="0" max="@item.QuantityOnHand" value="@item.Quantity" />
+                                        <button type="submit" class="btn btn-outline-pond btn-sm">Update</button>
+                                    </form>
+                                    <form asp-action="Remove" asp-route-slug="@item.ProductSlug" method="post">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="cart-item-price">
+                                <span>@item.UnitPrice.ToString("C")</span>
+                                <strong>@item.LineTotal.ToString("C")</strong>
+                            </div>
+                        </article>
+                    }
+                </div>
+
+                <aside class="cart-summary">
+                    <h2>Order Summary</h2>
+                    <div class="cart-summary-row">
+                        <span>Subtotal</span>
+                        <strong>@Model.Subtotal.ToString("C")</strong>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Shipping</span>
+                        <strong>TBD</strong>
+                    </div>
+                    <div class="cart-summary-total">
+                        <span>Total before shipping</span>
+                        <strong>@Model.Subtotal.ToString("C")</strong>
+                    </div>
+                    <button type="button" class="btn btn-pond w-100" disabled>Checkout</button>
+                </aside>
+            </div>
+        }
+    </div>
+</section>

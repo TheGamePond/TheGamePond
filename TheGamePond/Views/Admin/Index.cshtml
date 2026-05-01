@@ -1,3 +1,5 @@
+@model AdminDashboardViewModel
+
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -37,5 +39,24 @@
                 </div>
             </div>
         </div>
+
+        @if (Model.LowStockProducts.Count > 0)
+        {
+            <div class="admin-alert-panel">
+                <div>
+                    <span class="feature-label">Low stock</span>
+                    <h2>Needs attention</h2>
+                </div>
+                <div class="low-stock-list">
+                    @foreach (var product in Model.LowStockProducts)
+                    {
+                        <a asp-controller="AdminProducts" asp-action="Stock" asp-route-id="@product.Id">
+                            <span>@product.Name</span>
+                            <strong>@(product.InventoryItem?.QuantityOnHand ?? 0)</strong>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </section>

@@ -1,5 +1,8 @@
 @{
     ViewData["Title"] = "Collect. Play. Repeat.";
+    ViewData["MetaDescription"] = "The Game Pond is a custom marketplace for games, consoles, trading cards, accessories, collectibles, and community trade-ins.";
+    ViewData["CanonicalUrl"] = Url.Action("Index", "Home", null, Context.Request.Scheme);
+    ViewData["OgImage"] = Url.Content("~/images/brand/the-game-pond-logo.png");
 }
 
 <section class="hero-section">
@@ -12,7 +15,7 @@
                     A custom marketplace for games, consoles, accessories, trade-ins, drops, and community finds.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a class="btn btn-pond btn-lg" href="#">Shop inventory</a>
+                    <a class="btn btn-pond btn-lg" asp-controller="Shop" asp-action="Index">Shop inventory</a>
                     <a class="btn btn-outline-pond btn-lg" href="#">Start trade-in</a>
                 </div>
             </div>

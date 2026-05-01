@@ -1,0 +1,120 @@
+@model ProductDetailViewModel
+
+@{
+    ViewData["Title"] = Model.Name;
+    var heroImage = Model.Images.FirstOrDefault();
+    var productSummary = !string.IsNullOrWhiteSpace(Model.Description)
+        ? Model.Description
+        : $"{Model.Name} for {Model.Platform ?? "gaming and collectibles"} at The Game Pond.";
+    var metaDescription = productSummary.Length > 155
+        ? productSummary[..152] + "..."
+        : productSummary;
+    ViewData["MetaDescription"] = metaDescription;
+    ViewData["CanonicalUrl"] = Url.Action("Details", "Shop", new { slug = Model.Slug }, Context.Request.Scheme);
+    ViewData["OgTitle"] = $"{Model.Name} - The Game Pond";
+    ViewData["OgDescription"] = metaDescription;
+    ViewData["OgImage"] = heroImage?.ImagePath;
+}
+
+<section class="shop-shell">
+    <div class="container">
+        <div class="mb-4">
+            <a class="btn btn-outline-pond" asp-action="Index">Back to shop</a>
+        </div>
+
+        @if (TempData["StatusMessage"] is string message)
+        {
+            <div class="alert alert-success">@message</div>
+        }
+
+        <div class="product-detail-layout">
+            <div class="product-detail-gallery" data-product-gallery>
+                <div class="product-detail-main-image">
+                    @if (heroImage is not null)
+                    {
+                        <img src="@heroImage.ImagePath" alt="@heroImage.AltText" data-product-gallery-main />
+                    }
+                    else
+                    {
+                        <span>TGP</span>
+                    }
+                </div>
+
+                @if (Model.Images.Count > 1)
+                {
+                    <div class="product-detail-thumbs">
+                        @foreach (var image in Model.Images)
+                        {
+                            var selectedClass = image == heroImage ? "product-detail-thumb-button active" : "product-detail-thumb-button";
+                            <button type="button"
+                                    class="@selectedClass"
+                                    data-product-gallery-thumb
+                                    data-image-src="@image.ImagePath"
+                                    data-image-alt="@image.AltText"
+                                    aria-pressed="@(image == heroImage ? "true" : "false")"
+                                    aria-label="View @Model.Name image">
+                                <img src="@image.ImagePath" alt="@image.AltText" />
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="product-detail-info">
+                <p class="eyebrow">@Model.CategoryName</p>
+                <h1>@Model.Name</h1>
+                <div class="detail-price">@Model.SalePrice.ToString("C")</div>
+
+                <dl class="product-detail-facts">
+                    <div>
+                        <dt>SKU</dt>
+                        <dd>@Model.Sku</dd>
+                    </div>
+                    <div>
+                        <dt>Condition</dt>
+                        <dd>@Model.Condition</dd>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Platform))
+                    {
+                        <div>
+                            <dt>Platform</dt>
+                            <dd>@Model.Platform</dd>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Franchise))
+                    {
+                        <div>
+                            <dt>Franchise</dt>
+                            <dd>@Model.Franchise</dd>
+                        </div>
+                    }
+                </dl>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <div class="product-description">
+                        <h2>Description</h2>
+                        <p>@Model.Description</p>
+                    </div>
+                }
+
+                <div class="product-detail-actions">
+                    @if (Model.IsInStock)
+                    {
+                        <span class="stock-pill">@Model.QuantityOnHand in stock</span>
+                        <form asp-controller="Cart" asp-action="Add" asp-route-slug="@Model.Slug" method="post" class="add-to-cart-form">
+                            <label class="form-label" for="quantity">Qty</label>
+                            <input id="quantity" class="form-control" type="number" name="quantity" value="1" min="1" max="@Model.QuantityOnHand" />
+                            <button type="submit" class="btn btn-pond btn-lg">Add to cart</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="stock-pill stock-pill-empty">Sold out</span>
+                        <button type="button" class="btn btn-outline-pond btn-lg" disabled>Unavailable</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
