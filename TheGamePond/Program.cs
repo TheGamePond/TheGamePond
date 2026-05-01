@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TheGamePond.Data;
 using TheGamePond.Models;
 using TheGamePond.Services.Cart;
+using TheGamePond.Services.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICartSessionService, CartSessionService>();
+builder.Services.AddScoped<IPaymentGateway, LocalTestPaymentGateway>();
+builder.Services.AddScoped<IOrderPaymentService, OrderPaymentService>();
 builder.Services.AddSession(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -56,6 +59,28 @@ using (var scope = app.Services.CreateScope())
         .CreateLogger("IdentitySeedData");
 
     await IdentitySeedData.SeedAsync(scope.ServiceProvider, app.Configuration, seedLogger);
+
+    if (app.Configuration.GetValue<bool>("SeedMockInventory:Delete"))
+    {
+        var mockInventoryLogger = scope.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("MockInventorySeedData");
+
+        await MockInventorySeedData.DeleteAsync(scope.ServiceProvider, mockInventoryLogger);
+    }
+    else if (app.Configuration.GetValue<bool>("SeedMockInventory:Enabled"))
+    {
+        var mockInventoryLogger = scope.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("MockInventorySeedData");
+
+        await MockInventorySeedData.SeedAsync(scope.ServiceProvider, mockInventoryLogger);
+    }
+}
+
+if (app.Configuration.GetValue<bool>("SeedMockInventory:ExitAfterSeed"))
+{
+    return;
 }
 
 // Configure the HTTP request pipeline.

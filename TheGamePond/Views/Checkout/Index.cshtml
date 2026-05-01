@@ -1,0 +1,111 @@
+@model CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+    ViewData["MetaDescription"] = "Enter shipping details and continue to secure payment for your Game Pond order.";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container">
+        <div class="shop-heading">
+            <div>
+                <p class="eyebrow">Shipping-only checkout</p>
+                <h1>Checkout</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-controller="Cart" asp-action="Index">Back to cart</a>
+        </div>
+
+        <form method="post" class="checkout-layout">
+            <div class="checkout-panel">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <h2>Contact</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="CustomerName" class="form-label"></label>
+                        <input asp-for="CustomerName" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="CustomerName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CustomerEmail" class="form-label"></label>
+                        <input asp-for="CustomerEmail" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CustomerPhone" class="form-label"></label>
+                        <input asp-for="CustomerPhone" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h2>Shipping</h2>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="ShippingAddressLine1" class="form-label"></label>
+                        <input asp-for="ShippingAddressLine1" class="form-control" autocomplete="address-line1" />
+                        <span asp-validation-for="ShippingAddressLine1" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="ShippingAddressLine2" class="form-label"></label>
+                        <input asp-for="ShippingAddressLine2" class="form-control" autocomplete="address-line2" />
+                        <span asp-validation-for="ShippingAddressLine2" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-5">
+                        <label asp-for="ShippingCity" class="form-label"></label>
+                        <input asp-for="ShippingCity" class="form-control" autocomplete="address-level2" />
+                        <span asp-validation-for="ShippingCity" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="ShippingState" class="form-label"></label>
+                        <input asp-for="ShippingState" class="form-control" autocomplete="address-level1" />
+                        <span asp-validation-for="ShippingState" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ShippingPostalCode" class="form-label"></label>
+                        <input asp-for="ShippingPostalCode" class="form-control" autocomplete="postal-code" />
+                        <span asp-validation-for="ShippingPostalCode" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ShippingCountry" class="form-label"></label>
+                        <input asp-for="ShippingCountry" class="form-control" autocomplete="country-name" />
+                        <span asp-validation-for="ShippingCountry" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="CustomerNotes" class="form-label"></label>
+                        <textarea asp-for="CustomerNotes" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="CustomerNotes" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="cart-summary">
+                <h2>Order Summary</h2>
+                @foreach (var item in Model.Cart.Items)
+                {
+                    <div class="checkout-summary-item">
+                        <span>@item.Name x @item.Quantity</span>
+                        <strong>@item.LineTotal.ToString("C")</strong>
+                    </div>
+                }
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <strong>@Model.Cart.Subtotal.ToString("C")</strong>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Shipping</span>
+                    <strong>Calculated later</strong>
+                </div>
+                <div class="cart-summary-total">
+                    <span>Total today</span>
+                    <strong>@Model.Cart.Subtotal.ToString("C")</strong>
+                </div>
+                <button class="btn btn-pond w-100" type="submit">Continue to payment</button>
+            </aside>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

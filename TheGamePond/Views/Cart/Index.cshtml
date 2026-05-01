@@ -90,7 +90,7 @@
                         <span>Total before shipping</span>
                         <strong>@Model.Subtotal.ToString("C")</strong>
                     </div>
-                    <button type="button" class="btn btn-pond w-100" disabled>Checkout</button>
+                    <a class="btn btn-pond w-100" asp-controller="Checkout" asp-action="Index">Checkout</a>
                 </aside>
             </div>
         }

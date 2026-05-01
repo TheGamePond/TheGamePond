@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TheGamePond.Models.Catalog;
 
@@ -11,6 +10,13 @@ public class Product
     [StringLength(160)]
     public string Name { get; set; } = string.Empty;
 
+    [Required]
+    [StringLength(180)]
+    public string Slug { get; set; } = string.Empty;
+
+    [StringLength(4000)]
+    public string? Description { get; set; }
+
     [StringLength(80)]
     public string Sku { get; set; } = string.Empty;
 
@@ -18,27 +24,24 @@ public class Product
     public string? Barcode { get; set; }
 
     [StringLength(80)]
-    public string Platform { get; set; } = string.Empty;
+    public string? Platform { get; set; }
 
-    [StringLength(80)]
-    public string Condition { get; set; } = string.Empty;
+    [StringLength(120)]
+    public string? Franchise { get; set; }
 
-    [StringLength(1200)]
-    public string? Description { get; set; }
+    public ProductCondition Condition { get; set; } = ProductCondition.New;
 
-    [Column(TypeName = "numeric(10,2)")]
-    public decimal CostPrice { get; set; }
+    public ProductStatus Status { get; set; } = ProductStatus.Draft;
 
-    [Column(TypeName = "numeric(10,2)")]
+    public decimal? CostPrice { get; set; }
+
     public decimal SalePrice { get; set; }
-
-    public bool IsActive { get; set; } = true;
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? UpdatedAt { get; set; }
 
-    public int ProductCategoryId { get; set; }
+    public int CategoryId { get; set; }
 
     public ProductCategory? Category { get; set; }
 

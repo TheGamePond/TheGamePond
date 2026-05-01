@@ -11,13 +11,15 @@ public class ProductImage
     public Product? Product { get; set; }
 
     [Required]
-    [StringLength(300)]
-    public string FilePath { get; set; } = string.Empty;
+    [StringLength(260)]
+    public string ImagePath { get; set; } = string.Empty;
 
-    [StringLength(180)]
+    [StringLength(160)]
     public string? AltText { get; set; }
 
     public bool IsPrimary { get; set; }
 
-    public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.UtcNow;
+    public int SortOrder { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

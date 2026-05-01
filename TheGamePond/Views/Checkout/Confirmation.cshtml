@@ -1,0 +1,54 @@
+@model OrderConfirmationViewModel
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container checkout-narrow">
+        <div class="checkout-panel">
+            <p class="eyebrow">Order received</p>
+            <h1>Thank you</h1>
+            <p class="detail-copy">Order @Model.OrderNumber is @Model.PaymentStatus.ToString().ToLowerInvariant().</p>
+
+            <div class="confirmation-status">
+                <div>
+                    <span>Status</span>
+                    <strong>@Model.Status</strong>
+                </div>
+                <div>
+                    <span>Total</span>
+                    <strong>@Model.Total.ToString("C")</strong>
+                </div>
+            </div>
+
+            <div class="admin-table-shell mt-4">
+                <table class="table admin-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.ProductName</strong>
+                                    <span class="table-subtitle d-block">SKU @item.Sku</span>
+                                </td>
+                                <td>@item.Quantity</td>
+                                <td class="text-end">@item.LineTotal.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <a class="btn btn-outline-pond mt-4" asp-controller="Shop" asp-action="Index">Continue shopping</a>
+        </div>
+    </div>
+</section>

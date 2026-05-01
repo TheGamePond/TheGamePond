@@ -676,6 +676,96 @@ body {
   font-size: 1.3rem;
 }
 
+.checkout-layout {
+  align-items: start;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.checkout-panel {
+  background: #fff;
+  border: 1px solid var(--pond-border);
+  border-radius: 8px;
+  box-shadow: 0 18px 42px rgba(15, 61, 94, 0.08);
+  padding: 28px;
+}
+
+.checkout-panel h1 {
+  color: var(--pond-dark-blue);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.checkout-panel h2 {
+  border-top: 1px solid var(--pond-border);
+  color: var(--pond-dark-blue);
+  font-size: 1.2rem;
+  font-weight: 850;
+  margin: 1.5rem 0 1rem;
+  padding-top: 1.5rem;
+}
+
+.checkout-panel h2:first-of-type {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.checkout-summary-item {
+  align-items: start;
+  border-bottom: 1px solid var(--pond-border);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.checkout-summary-item span {
+  color: var(--pond-muted);
+}
+
+.checkout-summary-item strong {
+  color: var(--pond-dark-blue);
+  white-space: nowrap;
+}
+
+.checkout-narrow {
+  max-width: 760px;
+}
+
+.confirmation-status {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1.5rem;
+}
+
+.confirmation-status div {
+  border: 1px solid var(--pond-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.confirmation-status span {
+  color: var(--pond-muted);
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.confirmation-status strong {
+  color: var(--pond-dark-blue);
+  display: block;
+  font-size: 1.4rem;
+  margin-top: 0.35rem;
+}
+
 .nav-logout {
   margin: 0;
 }
@@ -1080,9 +1170,11 @@ body {
 
   .shop-filter-bar,
   .cart-layout,
+  .checkout-layout,
   .cart-item,
   .product-detail-layout,
-  .product-detail-facts {
+  .product-detail-facts,
+  .confirmation-status {
     grid-template-columns: 1fr;
   }
 

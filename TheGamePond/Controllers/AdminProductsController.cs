@@ -46,7 +46,8 @@ public class AdminProductsController : Controller
             productsQuery = productsQuery.Where(product =>
                 product.Name.Contains(trimmedSearch) ||
                 product.Sku.Contains(trimmedSearch) ||
-                (product.Barcode != null && product.Barcode.Contains(trimmedSearch)));
+                (product.Barcode != null && product.Barcode.Contains(trimmedSearch)) ||
+                (product.Franchise != null && product.Franchise.Contains(trimmedSearch)));
         }
 
         if (lowStock)
@@ -82,15 +83,16 @@ public class AdminProductsController : Controller
         var product = new Product
         {
             Name = model.Name.Trim(),
+            Slug = await CreateUniqueSlugAsync(model.Name),
             Sku = model.Sku.Trim(),
             Barcode = NormalizeOptional(model.Barcode),
-            Platform = model.Platform.Trim(),
-            Condition = model.Condition.Trim(),
+            Platform = NormalizeOptional(model.Platform),
+            Condition = ParseCondition(model.Condition),
             Description = NormalizeOptional(model.Description),
-            ProductCategoryId = model.ProductCategoryId,
+            CategoryId = model.ProductCategoryId,
             CostPrice = model.CostPrice,
             SalePrice = model.SalePrice,
-            IsActive = model.IsActive,
+            Status = model.IsActive ? ProductStatus.Active : ProductStatus.Draft,
             InventoryItem = new InventoryItem
             {
                 QuantityOnHand = model.QuantityOnHand,
@@ -107,7 +109,7 @@ public class AdminProductsController : Controller
             _dbContext.ProductImages.Add(new ProductImage
             {
                 ProductId = product.Id,
-                FilePath = imagePath,
+                ImagePath = imagePath,
                 AltText = product.Name,
                 IsPrimary = true
             });
@@ -118,10 +120,11 @@ public class AdminProductsController : Controller
             _dbContext.StockAdjustments.Add(new StockAdjustment
             {
                 ProductId = product.Id,
-                QuantityChange = model.QuantityOnHand,
+                QuantityDelta = model.QuantityOnHand,
                 QuantityAfter = model.QuantityOnHand,
-                Reason = "Initial stock",
-                AdjustedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                Reason = StockAdjustmentReason.InitialStock,
+                Notes = "Initial stock",
+                CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             });
         }
 
@@ -169,16 +172,16 @@ public class AdminProductsController : Controller
             Name = product.Name,
             Sku = product.Sku,
             Barcode = product.Barcode,
-            Platform = product.Platform,
-            Condition = product.Condition,
+            Platform = product.Platform ?? string.Empty,
+            Condition = product.Condition.ToString(),
             Description = product.Description,
-            ProductCategoryId = product.ProductCategoryId,
-            CostPrice = product.CostPrice,
+            ProductCategoryId = product.CategoryId,
+            CostPrice = product.CostPrice ?? 0,
             SalePrice = product.SalePrice,
             QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
             LowStockThreshold = product.InventoryItem?.LowStockThreshold ?? 1,
-            IsActive = product.IsActive,
-            ExistingImagePath = product.Images.FirstOrDefault(image => image.IsPrimary)?.FilePath
+            IsActive = product.Status == ProductStatus.Active,
+            ExistingImagePath = product.Images.FirstOrDefault(image => image.IsPrimary)?.ImagePath
         };
 
         return View(await BuildFormViewModelAsync(model));
@@ -213,13 +216,13 @@ public class AdminProductsController : Controller
         product.Name = model.Name.Trim();
         product.Sku = model.Sku.Trim();
         product.Barcode = NormalizeOptional(model.Barcode);
-        product.Platform = model.Platform.Trim();
-        product.Condition = model.Condition.Trim();
+        product.Platform = NormalizeOptional(model.Platform);
+        product.Condition = ParseCondition(model.Condition);
         product.Description = NormalizeOptional(model.Description);
-        product.ProductCategoryId = model.ProductCategoryId;
+        product.CategoryId = model.ProductCategoryId;
         product.CostPrice = model.CostPrice;
         product.SalePrice = model.SalePrice;
-        product.IsActive = model.IsActive;
+        product.Status = model.IsActive ? ProductStatus.Active : ProductStatus.Draft;
         product.UpdatedAt = DateTimeOffset.UtcNow;
 
         product.InventoryItem ??= new InventoryItem { ProductId = product.Id };
@@ -233,10 +236,11 @@ public class AdminProductsController : Controller
             _dbContext.StockAdjustments.Add(new StockAdjustment
             {
                 ProductId = product.Id,
-                QuantityChange = model.QuantityOnHand - originalQuantity,
+                QuantityDelta = model.QuantityOnHand - originalQuantity,
                 QuantityAfter = model.QuantityOnHand,
-                Reason = "Manual count update",
-                AdjustedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                Reason = StockAdjustmentReason.Correction,
+                Notes = "Manual count update",
+                CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             });
         }
 
@@ -251,7 +255,7 @@ public class AdminProductsController : Controller
             _dbContext.ProductImages.Add(new ProductImage
             {
                 ProductId = product.Id,
-                FilePath = imagePath,
+                ImagePath = imagePath,
                 AltText = product.Name,
                 IsPrimary = true
             });
@@ -272,9 +276,9 @@ public class AdminProductsController : Controller
             return BadRequest();
         }
 
-        if (model.QuantityChange == 0)
+        if (model.QuantityDelta == 0)
         {
-            ModelState.AddModelError(nameof(model.QuantityChange), "Enter a non-zero stock change.");
+            ModelState.AddModelError(nameof(model.QuantityDelta), "Enter a non-zero stock change.");
         }
 
         var product = await _dbContext.Products
@@ -293,7 +297,7 @@ public class AdminProductsController : Controller
         }
 
         product.InventoryItem ??= new InventoryItem { ProductId = product.Id };
-        var adjustedQuantity = product.InventoryItem.QuantityOnHand + model.QuantityChange;
+        var adjustedQuantity = product.InventoryItem.QuantityOnHand + model.QuantityDelta;
 
         if (adjustedQuantity < 0)
         {
@@ -308,10 +312,11 @@ public class AdminProductsController : Controller
         _dbContext.StockAdjustments.Add(new StockAdjustment
         {
             ProductId = product.Id,
-            QuantityChange = model.QuantityChange,
+            QuantityDelta = model.QuantityDelta,
             QuantityAfter = adjustedQuantity,
-            Reason = model.Reason.Trim(),
-            AdjustedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            Reason = model.Reason,
+            Notes = model.Notes,
+            CreatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
         });
 
         await _dbContext.SaveChangesAsync();
@@ -325,7 +330,8 @@ public class AdminProductsController : Controller
         model.Categories = await _dbContext.ProductCategories
             .AsNoTracking()
             .Where(category => category.IsActive)
-            .OrderBy(category => category.Name)
+            .OrderBy(category => category.SortOrder)
+            .ThenBy(category => category.Name)
             .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
             .ToListAsync();
 
@@ -366,5 +372,42 @@ public class AdminProductsController : Controller
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static ProductCondition ParseCondition(string? condition)
+    {
+        if (Enum.TryParse<ProductCondition>(condition, ignoreCase: true, out var parsed))
+        {
+            return parsed;
+        }
+
+        return ProductCondition.New;
+    }
+
+    private async Task<string> CreateUniqueSlugAsync(string name)
+    {
+        var slug = CreateSlug(name);
+        var candidate = slug;
+        var suffix = 2;
+
+        while (await _dbContext.Products.AnyAsync(product => product.Slug == candidate))
+        {
+            candidate = $"{slug}-{suffix}";
+            suffix++;
+        }
+
+        return candidate;
+    }
+
+    private static string CreateSlug(string value)
+    {
+        var characters = value
+            .Trim()
+            .ToLowerInvariant()
+            .Select(character => char.IsLetterOrDigit(character) ? character : '-')
+            .ToArray();
+
+        var slug = string.Join('-', new string(characters).Split('-', StringSplitOptions.RemoveEmptyEntries));
+        return string.IsNullOrWhiteSpace(slug) ? Guid.NewGuid().ToString("N") : slug;
     }
 }

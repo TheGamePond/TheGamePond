@@ -62,7 +62,7 @@
                                 <div class="product-cell">
                                     @if (image is not null)
                                     {
-                                        <img src="@image.FilePath" alt="@image.AltText" />
+                                        <img src="@image.ImagePath" alt="@image.AltText" />
                                     }
                                     else
                                     {
@@ -80,7 +80,7 @@
                             <td>
                                 <span class="stock-pill @(isLowStock ? "stock-low" : "stock-ok")">@quantity</span>
                             </td>
-                            <td>@(product.IsActive ? "Active" : "Hidden")</td>
+                            <td>@product.Status</td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-pond" asp-action="Details" asp-route-id="@product.Id">Open</a>
                             </td>

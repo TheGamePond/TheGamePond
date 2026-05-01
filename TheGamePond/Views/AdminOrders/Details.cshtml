@@ -1,0 +1,113 @@
+@model Order
+
+@{
+    ViewData["Title"] = $"Order {Model.OrderNumber}";
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Order detail</p>
+                <h1>@Model.OrderNumber</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-action="Index">Orders</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="admin-card">
+                    <h2 class="admin-subheading">Customer</h2>
+                    <dl class="detail-list">
+                        <dt>Name</dt>
+                        <dd>@Model.CustomerName</dd>
+                        <dt>Email</dt>
+                        <dd>@Model.CustomerEmail</dd>
+                        <dt>Phone</dt>
+                        <dd>@(Model.CustomerPhone ?? "Not provided")</dd>
+                        <dt>Status</dt>
+                        <dd>@Model.Status</dd>
+                        <dt>Payment</dt>
+                        <dd>@Model.PaymentStatus</dd>
+                    </dl>
+                </div>
+
+                <div class="admin-card mt-4">
+                    <h2 class="admin-subheading">Shipping</h2>
+                    <p class="detail-copy">
+                        @Model.ShippingAddressLine1<br />
+                        @if (!string.IsNullOrWhiteSpace(Model.ShippingAddressLine2))
+                        {
+                            @Model.ShippingAddressLine2<br />
+                        }
+                        @Model.ShippingCity, @Model.ShippingState @Model.ShippingPostalCode<br />
+                        @Model.ShippingCountry
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="admin-card">
+                    <h2 class="admin-subheading">Items</h2>
+                    <div class="admin-table-shell">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.ProductName</strong>
+                                            <span class="table-subtitle d-block">SKU @item.Sku</span>
+                                        </td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.UnitPrice.ToString("C")</td>
+                                        <td class="text-end">@item.LineTotal.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cart-summary-total">
+                        <span>Total</span>
+                        <strong>@Model.Total.ToString("C")</strong>
+                    </div>
+                </div>
+
+                <div class="admin-card mt-4">
+                    <h2 class="admin-subheading">Payment events</h2>
+                    <div class="admin-table-shell">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Provider</th>
+                                    <th>Event</th>
+                                    <th>Processed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var paymentEvent in Model.PaymentEvents)
+                                {
+                                    <tr>
+                                        <td>@paymentEvent.CreatedAt.LocalDateTime.ToString("g")</td>
+                                        <td>@paymentEvent.Provider</td>
+                                        <td>@paymentEvent.EventType</td>
+                                        <td>@(paymentEvent.WasProcessed ? "Yes" : "No")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -30,7 +30,7 @@
                 <div class="admin-card">
                     @if (primaryImage is not null)
                     {
-                        <img class="product-detail-image" src="@primaryImage.FilePath" alt="@primaryImage.AltText" />
+                        <img class="product-detail-image" src="@primaryImage.ImagePath" alt="@primaryImage.AltText" />
                     }
                     else
                     {
@@ -44,7 +44,7 @@
                         <dt>Category</dt>
                         <dd>@Model.Category?.Name</dd>
                         <dt>Status</dt>
-                        <dd>@(Model.IsActive ? "Active" : "Hidden")</dd>
+                        <dd>@Model.Status</dd>
                     </dl>
                 </div>
             </div>
@@ -68,12 +68,12 @@
                     <form class="stock-adjust-form" asp-action="AdjustStock" asp-route-id="@Model.Id" method="post">
                         <input type="hidden" name="ProductId" value="@Model.Id" />
                         <div>
-                            <label class="form-label" for="QuantityChange">Quantity change</label>
-                            <input class="form-control" id="QuantityChange" name="QuantityChange" type="number" value="1" />
+                            <label class="form-label" for="QuantityDelta">Quantity change</label>
+                            <input class="form-control" id="QuantityDelta" name="QuantityDelta" type="number" value="1" />
                         </div>
                         <div>
                             <label class="form-label" for="Reason">Reason</label>
-                            <input class="form-control" id="Reason" name="Reason" value="Stock count" />
+                            <select class="form-select" id="Reason" name="Reason" asp-items="Html.GetEnumSelectList<TheGamePond.Models.Catalog.StockAdjustmentReason>()"></select>
                         </div>
                         <button class="btn btn-pond" type="submit">Adjust stock</button>
                     </form>
@@ -107,7 +107,7 @@
                                 {
                                     <tr>
                                         <td>@adjustment.CreatedAt.LocalDateTime.ToString("g")</td>
-                                        <td>@adjustment.QuantityChange</td>
+                                        <td>@adjustment.QuantityDelta</td>
                                         <td>@adjustment.QuantityAfter</td>
                                         <td>@adjustment.Reason</td>
                                     </tr>

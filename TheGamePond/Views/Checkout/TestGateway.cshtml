@@ -1,0 +1,26 @@
+@model TheGamePond.Models.Orders.Order
+
+@{
+    ViewData["Title"] = "Test Payment";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container checkout-narrow">
+        <div class="checkout-panel">
+            <p class="eyebrow">Temporary gateway adapter</p>
+            <h1>Test Payment</h1>
+            <p class="detail-copy">Order @Model.OrderNumber is ready for payment through the local test gateway.</p>
+
+            <div class="cart-summary-row">
+                <span>Total</span>
+                <strong>@Model.Total.ToString("C")</strong>
+            </div>
+
+            <form asp-action="CompleteTestGateway" asp-route-orderNumber="@Model.OrderNumber" method="post">
+                <input type="hidden" name="sessionId" value="@Model.PaymentSessionId" />
+                <button class="btn btn-pond w-100" type="submit">Simulate successful payment</button>
+            </form>
+        </div>
+    </div>
+</section>
