@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Shop";
+    ViewData["MetaDescription"] = "Browse The Game Pond inventory for video games, consoles, trading cards, accessories, collectibles, and retro finds.";
+    ViewData["CanonicalUrl"] = Url.Action("Index", "Shop", null, Context.Request.Scheme);
+    ViewData["OgTitle"] = "Shop The Pond - The Game Pond";
+    ViewData["OgImage"] = Url.Content("~/images/brand/the-game-pond-logo.png");
 }
 
 <section class="shop-shell">

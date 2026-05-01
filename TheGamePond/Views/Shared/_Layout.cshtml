@@ -1,9 +1,42 @@
 ﻿<!DOCTYPE html>
+@{
+    var title = ViewData["Title"] as string ?? "The Game Pond";
+    var pageTitle = title == "The Game Pond" ? title : $"{title} - The Game Pond";
+    var metaDescription = ViewData["MetaDescription"] as string
+        ?? "Shop games, trading cards, retro consoles, accessories, collectibles, and trade-ins at The Game Pond.";
+    var canonicalUrl = ViewData["CanonicalUrl"] as string;
+    var robots = ViewData["Robots"] as string;
+    var ogTitle = ViewData["OgTitle"] as string ?? pageTitle;
+    var ogDescription = ViewData["OgDescription"] as string ?? metaDescription;
+    var ogImage = ViewData["OgImage"] as string;
+    var absoluteOgImage = string.IsNullOrWhiteSpace(ogImage)
+        ? null
+        : ogImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+            ? ogImage
+            : $"{Context.Request.Scheme}://{Context.Request.Host}{ogImage}";
+}
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - The Game Pond</title>
+    <title>@pageTitle</title>
+    <meta name="description" content="@metaDescription" />
+    @if (!string.IsNullOrWhiteSpace(robots))
+    {
+        <meta name="robots" content="@robots" />
+    }
+    @if (!string.IsNullOrWhiteSpace(canonicalUrl))
+    {
+        <link rel="canonical" href="@canonicalUrl" />
+    }
+    <meta property="og:site_name" content="The Game Pond" />
+    <meta property="og:title" content="@ogTitle" />
+    <meta property="og:description" content="@ogDescription" />
+    <meta property="og:type" content="website" />
+    @if (!string.IsNullOrWhiteSpace(absoluteOgImage))
+    {
+        <meta property="og:image" content="@absoluteOgImage" />
+    }
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TheGamePond.styles.css" asp-append-version="true" />

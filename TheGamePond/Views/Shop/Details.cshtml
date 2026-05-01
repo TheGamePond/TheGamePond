@@ -3,6 +3,17 @@
 @{
     ViewData["Title"] = Model.Name;
     var heroImage = Model.Images.FirstOrDefault();
+    var productSummary = !string.IsNullOrWhiteSpace(Model.Description)
+        ? Model.Description
+        : $"{Model.Name} for {Model.Platform ?? "gaming and collectibles"} at The Game Pond.";
+    var metaDescription = productSummary.Length > 155
+        ? productSummary[..152] + "..."
+        : productSummary;
+    ViewData["MetaDescription"] = metaDescription;
+    ViewData["CanonicalUrl"] = Url.Action("Details", "Shop", new { slug = Model.Slug }, Context.Request.Scheme);
+    ViewData["OgTitle"] = $"{Model.Name} - The Game Pond";
+    ViewData["OgDescription"] = metaDescription;
+    ViewData["OgImage"] = heroImage?.ImagePath;
 }
 
 <section class="shop-shell">
