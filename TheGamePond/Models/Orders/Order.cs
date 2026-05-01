@@ -58,6 +58,12 @@ public class Order
     [StringLength(1000)]
     public string? CustomerNotes { get; set; }
 
+    [StringLength(120)]
+    public string? TrackingNumber { get; set; }
+
+    [StringLength(1000)]
+    public string? StaffNotes { get; set; }
+
     public decimal Subtotal { get; set; }
 
     public decimal ShippingTotal { get; set; }
@@ -75,4 +81,6 @@ public class Order
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 
     public ICollection<PaymentEvent> PaymentEvents { get; set; } = new List<PaymentEvent>();
+
+    public ICollection<OrderStatusHistory> StatusHistory { get; set; } = new List<OrderStatusHistory>();
 }

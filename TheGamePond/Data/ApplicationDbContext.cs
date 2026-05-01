@@ -30,6 +30,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
 
+    public DbSet<OrderStatusHistory> OrderStatusHistory => Set<OrderStatusHistory>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -199,6 +201,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(order => order.ShippingPostalCode).HasMaxLength(20).IsRequired();
             entity.Property(order => order.ShippingCountry).HasMaxLength(80).IsRequired();
             entity.Property(order => order.CustomerNotes).HasMaxLength(1000);
+            entity.Property(order => order.TrackingNumber).HasMaxLength(120);
+            entity.Property(order => order.StaffNotes).HasMaxLength(1000);
             entity.Property(order => order.Subtotal).HasPrecision(18, 2);
             entity.Property(order => order.ShippingTotal).HasPrecision(18, 2);
             entity.Property(order => order.TaxTotal).HasPrecision(18, 2);
@@ -238,6 +242,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasOne(paymentEvent => paymentEvent.Order)
                 .WithMany(order => order.PaymentEvents)
                 .HasForeignKey(paymentEvent => paymentEvent.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<OrderStatusHistory>(entity =>
+        {
+            entity.HasIndex(history => new { history.OrderId, history.CreatedAt });
+            entity.Property(history => history.ChangedByUserId).HasMaxLength(450);
+            entity.Property(history => history.Notes).HasMaxLength(1000);
+
+            entity
+                .HasOne(history => history.Order)
+                .WithMany(order => order.StatusHistory)
+                .HasForeignKey(history => history.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

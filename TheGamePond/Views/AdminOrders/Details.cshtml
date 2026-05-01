@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = $"Order {Model.OrderNumber}";
+    var allowedNextStatuses = TheGamePond.Controllers.AdminOrdersController.GetAllowedNextStatuses(Model.Status);
 }
 
 <section class="admin-shell">
@@ -13,6 +14,11 @@
             </div>
             <a class="btn btn-outline-pond" asp-action="Index">Orders</a>
         </div>
+
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-success" role="alert">@statusMessage</div>
+        }
 
         <div class="row g-4">
             <div class="col-lg-4">
@@ -29,6 +35,8 @@
                         <dd>@Model.Status</dd>
                         <dt>Payment</dt>
                         <dd>@Model.PaymentStatus</dd>
+                        <dt>Tracking</dt>
+                        <dd>@(Model.TrackingNumber ?? "Not set")</dd>
                     </dl>
                 </div>
 
@@ -44,6 +52,47 @@
                         @Model.ShippingCountry
                     </p>
                 </div>
+
+                <form asp-action="UpdateFulfillment" asp-route-orderNumber="@Model.OrderNumber" method="post">
+                    <input type="hidden" name="OrderNumber" value="@Model.OrderNumber" />
+
+                    <div class="admin-card mt-4">
+                        <h2 class="admin-subheading">Fulfillment</h2>
+                        <div class="mb-3">
+                            <label class="form-label" for="TrackingNumber">Tracking number</label>
+                            <input class="form-control" id="TrackingNumber" name="TrackingNumber" value="@Model.TrackingNumber" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="StaffNotes">Staff notes</label>
+                            <textarea class="form-control" id="StaffNotes" name="StaffNotes" rows="4">@Model.StaffNotes</textarea>
+                        </div>
+                        <button class="btn btn-outline-pond w-100" type="submit">Save fulfillment details</button>
+                    </div>
+
+                    <div class="admin-card mt-4">
+                        <h2 class="admin-subheading">Status transitions</h2>
+                        @if (!allowedNextStatuses.Any())
+                        {
+                            <p class="detail-copy">No further transitions are available for this order.</p>
+                        }
+                        else
+                        {
+                            <div class="order-transition-list">
+                                @foreach (var nextStatus in allowedNextStatuses)
+                                {
+                                    <button class="btn @(nextStatus is OrderStatus.Cancelled or OrderStatus.Refunded ? "btn-outline-danger" : "btn-pond") w-100"
+                                            type="submit"
+                                            name="NextStatus"
+                                            value="@((int)nextStatus)"
+                                            formaction="@Url.Action("UpdateStatus", new { orderNumber = Model.OrderNumber })"
+                                            formmethod="post">
+                                        Move to @nextStatus
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </form>
             </div>
 
             <div class="col-lg-8">
@@ -78,6 +127,39 @@
                     <div class="cart-summary-total">
                         <span>Total</span>
                         <strong>@Model.Total.ToString("C")</strong>
+                    </div>
+                </div>
+
+                <div class="admin-card mt-4">
+                    <h2 class="admin-subheading">Status history</h2>
+                    <div class="admin-table-shell">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.StatusHistory.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="empty-state">No status changes yet.</td>
+                                    </tr>
+                                }
+                                @foreach (var history in Model.StatusHistory)
+                                {
+                                    <tr>
+                                        <td>@history.CreatedAt.LocalDateTime.ToString("g")</td>
+                                        <td>@history.FromStatus</td>
+                                        <td>@history.ToStatus</td>
+                                        <td>@(history.Notes ?? "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
