@@ -78,7 +78,12 @@
                 @foreach (var product in Model.Products)
                 {
                     <article class="shop-product-card">
-                        <a class="shop-product-image" asp-action="Details" asp-route-slug="@product.Slug">
+                        <a class="shop-product-image"
+                           asp-action="Details"
+                           asp-route-slug="@product.Slug"
+                           asp-route-search="@Model.Search"
+                           asp-route-category="@Model.Category"
+                           asp-route-sort="@Model.Sort">
                             @if (product.PrimaryImagePath is not null)
                             {
                                 <img src="@product.PrimaryImagePath" alt="@product.PrimaryImageAltText" />
@@ -94,7 +99,11 @@
                                 <span>@product.Condition</span>
                             </div>
                             <h2>
-                                <a asp-action="Details" asp-route-slug="@product.Slug">@product.Name</a>
+                                <a asp-action="Details"
+                                   asp-route-slug="@product.Slug"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-category="@Model.Category"
+                                   asp-route-sort="@Model.Sort">@product.Name</a>
                             </h2>
                             <p>@product.Platform</p>
                             <div class="shop-product-footer">
@@ -109,7 +118,12 @@
                                 }
                             </div>
                             <div class="shop-product-actions">
-                                <a class="btn btn-outline-pond" asp-action="Details" asp-route-slug="@product.Slug">Details</a>
+                                <a class="btn btn-outline-pond"
+                                   asp-action="Details"
+                                   asp-route-slug="@product.Slug"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-category="@Model.Category"
+                                   asp-route-sort="@Model.Sort">Details</a>
                                 @if (product.IsInStock)
                                 {
                                     <form asp-controller="Cart" asp-action="Add" asp-route-slug="@product.Slug" method="post">

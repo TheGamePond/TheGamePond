@@ -26,5 +26,11 @@ public class ProductDetailViewModel
 
     public IReadOnlyList<ShopProductImageViewModel> Images { get; set; } = new List<ShopProductImageViewModel>();
 
+    public string? ShopSearch { get; set; }
+
+    public string? ShopCategory { get; set; }
+
+    public string ShopSort { get; set; } = "newest";
+
     public bool IsInStock => QuantityOnHand > 0;
 }
