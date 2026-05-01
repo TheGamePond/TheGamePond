@@ -1,0 +1,122 @@
+@model TheGamePond.Models.Catalog.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+    var primaryImage = Model.Images.FirstOrDefault(image => image.IsPrimary) ?? Model.Images.FirstOrDefault();
+    var quantity = Model.InventoryItem?.QuantityOnHand ?? 0;
+    var threshold = Model.InventoryItem?.LowStockThreshold ?? 0;
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Product detail</p>
+                <h1>@Model.Name</h1>
+            </div>
+            <div class="admin-heading-actions">
+                <a class="btn btn-outline-pond" asp-action="Index">Products</a>
+                <a class="btn btn-pond" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+            </div>
+        </div>
+
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-success" role="alert">@statusMessage</div>
+        }
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="admin-card">
+                    @if (primaryImage is not null)
+                    {
+                        <img class="product-detail-image" src="@primaryImage.FilePath" alt="@primaryImage.AltText" />
+                    }
+                    else
+                    {
+                        <div class="product-detail-placeholder">No image</div>
+                    }
+                    <dl class="detail-list mt-3">
+                        <dt>SKU</dt>
+                        <dd>@Model.Sku</dd>
+                        <dt>Barcode</dt>
+                        <dd>@(Model.Barcode ?? "Not set")</dd>
+                        <dt>Category</dt>
+                        <dd>@Model.Category?.Name</dd>
+                        <dt>Status</dt>
+                        <dd>@(Model.IsActive ? "Active" : "Hidden")</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="admin-card">
+                    <div class="inventory-summary">
+                        <div>
+                            <span class="feature-label">Quantity on hand</span>
+                            <strong>@quantity</strong>
+                        </div>
+                        <div>
+                            <span class="feature-label">Low-stock threshold</span>
+                            <strong>@threshold</strong>
+                        </div>
+                        <div>
+                            <span class="feature-label">Sale price</span>
+                            <strong>@Model.SalePrice.ToString("C")</strong>
+                        </div>
+                    </div>
+
+                    <form class="stock-adjust-form" asp-action="AdjustStock" asp-route-id="@Model.Id" method="post">
+                        <input type="hidden" name="ProductId" value="@Model.Id" />
+                        <div>
+                            <label class="form-label" for="QuantityChange">Quantity change</label>
+                            <input class="form-control" id="QuantityChange" name="QuantityChange" type="number" value="1" />
+                        </div>
+                        <div>
+                            <label class="form-label" for="Reason">Reason</label>
+                            <input class="form-control" id="Reason" name="Reason" value="Stock count" />
+                        </div>
+                        <button class="btn btn-pond" type="submit">Adjust stock</button>
+                    </form>
+
+                    <hr />
+
+                    <h2 class="admin-subheading">Product notes</h2>
+                    <p class="detail-copy">@(Model.Description ?? "No description yet.")</p>
+                </div>
+
+                <div class="admin-card mt-4">
+                    <h2 class="admin-subheading">Stock adjustment log</h2>
+                    <div class="admin-table-wrap compact">
+                        <table class="table admin-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Change</th>
+                                    <th>After</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.StockAdjustments.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="empty-state">No stock adjustments yet.</td>
+                                    </tr>
+                                }
+                                @foreach (var adjustment in Model.StockAdjustments)
+                                {
+                                    <tr>
+                                        <td>@adjustment.CreatedAt.LocalDateTime.ToString("g")</td>
+                                        <td>@adjustment.QuantityChange</td>
+                                        <td>@adjustment.QuantityAfter</td>
+                                        <td>@adjustment.Reason</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

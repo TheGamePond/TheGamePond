@@ -1,0 +1,16 @@
+namespace TheGamePond.Models.Catalog;
+
+public class InventoryItem
+{
+    public int Id { get; set; }
+
+    public int ProductId { get; set; }
+
+    public Product? Product { get; set; }
+
+    public int QuantityOnHand { get; set; }
+
+    public int LowStockThreshold { get; set; } = 1;
+
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+}

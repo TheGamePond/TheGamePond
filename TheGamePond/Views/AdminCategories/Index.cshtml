@@ -1,0 +1,50 @@
+@model IReadOnlyList<TheGamePond.Models.Catalog.ProductCategory>
+
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Catalog operations</p>
+                <h1>Categories</h1>
+            </div>
+            <a class="btn btn-pond" asp-action="Create">Add category</a>
+        </div>
+
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-success" role="alert">@statusMessage</div>
+        }
+
+        <div class="admin-table-wrap">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Slug</th>
+                        <th>Products</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model)
+                    {
+                        <tr>
+                            <td><strong>@category.Name</strong></td>
+                            <td>@category.Slug</td>
+                            <td>@category.Products.Count</td>
+                            <td>@(category.IsActive ? "Active" : "Hidden")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-pond" asp-action="Edit" asp-route-id="@category.Id">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

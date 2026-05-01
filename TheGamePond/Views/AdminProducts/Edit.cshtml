@@ -1,0 +1,23 @@
+@model TheGamePond.Models.Admin.ProductFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<section class="admin-shell">
+    <div class="container admin-form-container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Catalog operations</p>
+                <h1>Edit Product</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-action="Details" asp-route-id="@Model.Id">Back</a>
+        </div>
+
+        <partial name="_ProductForm" model="Model" />
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
