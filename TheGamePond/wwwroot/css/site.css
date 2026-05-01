@@ -811,6 +811,42 @@ body {
   color: var(--pond-dark-blue);
 }
 
+.trade-in-items {
+  display: grid;
+  gap: 1rem;
+}
+
+.trade-in-item {
+  border: 1px solid var(--pond-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.trade-in-step {
+  align-items: center;
+  border-bottom: 1px solid var(--pond-border);
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.trade-in-step strong {
+  align-items: center;
+  background: rgba(108, 194, 74, 0.2);
+  border-radius: 999px;
+  color: var(--pond-dark-green);
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.trade-in-step span {
+  color: var(--pond-muted);
+  font-weight: 750;
+}
+
 .nav-logout {
   margin: 0;
 }

@@ -1,0 +1,89 @@
+@model IReadOnlyList<TradeInRequest>
+
+@{
+    ViewData["Title"] = "Trade-Ins";
+    var selectedStatus = ViewData["Status"] as TradeInRequestStatus?;
+}
+
+<section class="admin-shell">
+    <div class="container">
+        <div class="admin-heading">
+            <div>
+                <p class="eyebrow">Buying desk</p>
+                <h1>Trade-ins</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-controller="Admin" asp-action="Index">Dashboard</a>
+        </div>
+
+        <form class="admin-filter-bar" method="get">
+            <div>
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status" asp-items="Html.GetEnumSelectList<TradeInRequestStatus>()">
+                    <option value="">All requests</option>
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-outline-pond" type="submit">Filter</button>
+                <a class="btn btn-link" asp-action="Index">Reset</a>
+            </div>
+        </form>
+
+        <div class="admin-table-shell">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                        <th>Offer</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="empty-state">No trade-in requests yet.</td>
+                        </tr>
+                    }
+                    @foreach (var request in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@request.RequestNumber</strong>
+                                <span class="table-subtitle d-block">@request.CreatedAt.LocalDateTime.ToString("g")</span>
+                            </td>
+                            <td>
+                                @request.CustomerName
+                                <span class="table-subtitle d-block">@request.CustomerEmail</span>
+                            </td>
+                            <td>@request.Status</td>
+                            <td>@request.Items.Sum(item => item.Quantity)</td>
+                            <td>
+                                @if (request.EstimatedOfferLow.HasValue || request.EstimatedOfferHigh.HasValue)
+                                {
+                                    <span>@((request.EstimatedOfferLow ?? 0).ToString("C")) - @((request.EstimatedOfferHigh ?? 0).ToString("C"))</span>
+                                }
+                                else
+                                {
+                                    <span class="table-subtitle">Not set</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-pond" asp-action="Details" asp-route-requestNumber="@request.RequestNumber">Open</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+@if (selectedStatus.HasValue)
+{
+    <script>
+        document.getElementById("status").value = "@((int)selectedStatus.Value)";
+    </script>
+}

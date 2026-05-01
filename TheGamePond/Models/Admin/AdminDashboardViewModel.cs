@@ -12,5 +12,7 @@ public class AdminDashboardViewModel
 
     public int DraftProductCount { get; set; }
 
+    public int OpenTradeInCount { get; set; }
+
     public IReadOnlyList<Product> LowStockProducts { get; set; } = new List<Product>();
 }

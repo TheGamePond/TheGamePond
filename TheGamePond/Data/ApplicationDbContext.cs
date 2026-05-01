@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TheGamePond.Models;
 using TheGamePond.Models.Catalog;
 using TheGamePond.Models.Orders;
+using TheGamePond.Models.TradeIns;
 
 namespace TheGamePond.Data;
 
@@ -31,6 +32,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
 
     public DbSet<OrderStatusHistory> OrderStatusHistory => Set<OrderStatusHistory>();
+
+    public DbSet<TradeInRequest> TradeInRequests => Set<TradeInRequest>();
+
+    public DbSet<TradeInRequestItem> TradeInRequestItems => Set<TradeInRequestItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -255,6 +260,34 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasOne(history => history.Order)
                 .WithMany(order => order.StatusHistory)
                 .HasForeignKey(history => history.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<TradeInRequest>(entity =>
+        {
+            entity.HasIndex(request => request.RequestNumber).IsUnique();
+            entity.Property(request => request.RequestNumber).HasMaxLength(32).IsRequired();
+            entity.Property(request => request.CustomerName).HasMaxLength(120).IsRequired();
+            entity.Property(request => request.CustomerEmail).HasMaxLength(180).IsRequired();
+            entity.Property(request => request.CustomerPhone).HasMaxLength(40);
+            entity.Property(request => request.PreferredContactMethod).HasMaxLength(80);
+            entity.Property(request => request.CustomerNotes).HasMaxLength(1000);
+            entity.Property(request => request.StaffNotes).HasMaxLength(1000);
+            entity.Property(request => request.EstimatedOfferLow).HasPrecision(18, 2);
+            entity.Property(request => request.EstimatedOfferHigh).HasPrecision(18, 2);
+        });
+
+        builder.Entity<TradeInRequestItem>(entity =>
+        {
+            entity.Property(item => item.ItemName).HasMaxLength(160).IsRequired();
+            entity.Property(item => item.Platform).HasMaxLength(80);
+            entity.Property(item => item.Condition).HasMaxLength(80);
+            entity.Property(item => item.Notes).HasMaxLength(500);
+
+            entity
+                .HasOne(item => item.TradeInRequest)
+                .WithMany(request => request.Items)
+                .HasForeignKey(item => item.TradeInRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

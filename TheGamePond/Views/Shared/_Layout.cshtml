@@ -68,7 +68,7 @@
                             @await Component.InvokeAsync("CartNav")
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Trade-In</a>
+                            <a class="nav-link" asp-controller="TradeIns" asp-action="Create">Trade-In</a>
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -80,6 +80,9 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="AdminOrders" asp-action="Index">Orders</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="AdminTradeIns" asp-action="Index">Trade-Ins</a>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="nav-logout">

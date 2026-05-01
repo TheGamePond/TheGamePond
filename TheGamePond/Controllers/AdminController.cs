@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TheGamePond.Data;
 using TheGamePond.Models.Admin;
 using TheGamePond.Models.Catalog;
+using TheGamePond.Models.TradeIns;
 
 namespace TheGamePond.Controllers;
 
@@ -40,6 +41,10 @@ public class AdminController : Controller
                 product.Status == ProductStatus.Active &&
                 product.InventoryItem != null &&
                 product.InventoryItem.QuantityOnHand <= product.InventoryItem.LowStockThreshold),
+            OpenTradeInCount = await _context.TradeInRequests.CountAsync(request =>
+                request.Status == TradeInRequestStatus.Submitted ||
+                request.Status == TradeInRequestStatus.UnderReview ||
+                request.Status == TradeInRequestStatus.OfferSent),
             LowStockProducts = lowStockProducts
         };
 

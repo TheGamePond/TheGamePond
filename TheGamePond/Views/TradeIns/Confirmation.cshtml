@@ -1,0 +1,32 @@
+@model TradeInConfirmationViewModel
+
+@{
+    ViewData["Title"] = "Trade-In Submitted";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="shop-shell">
+    <div class="container checkout-narrow">
+        <div class="checkout-panel">
+            <p class="eyebrow">Trade-in submitted</p>
+            <h1>We received it</h1>
+            <p class="detail-copy">Your trade-in request number is @Model.RequestNumber.</p>
+
+            <div class="confirmation-status">
+                <div>
+                    <span>Status</span>
+                    <strong>@Model.Status</strong>
+                </div>
+                <div>
+                    <span>Next step</span>
+                    <strong>Review</strong>
+                </div>
+            </div>
+
+            <div class="confirmation-actions">
+                <a class="btn btn-pond" asp-controller="Shop" asp-action="Index">Continue shopping</a>
+                <a class="btn btn-outline-pond" asp-action="Create">Submit another trade-in</a>
+            </div>
+        </div>
+    </div>
+</section>

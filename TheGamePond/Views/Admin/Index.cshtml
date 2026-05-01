@@ -11,7 +11,7 @@
                 <p class="eyebrow">The Game Pond operations</p>
                 <h1>Admin Dashboard</h1>
             </div>
-            <span class="admin-status">Sprint 1 catalog</span>
+            <span class="admin-status">@Model.OpenTradeInCount open trade-ins</span>
         </div>
 
         <div class="row g-4">
@@ -35,8 +35,16 @@
                 <div class="admin-tile">
                     <span class="feature-label">Orders</span>
                     <h2>Fulfillment queue</h2>
-                    <p>Review paid checkout orders before the full fulfillment workflow lands in Sprint 4.</p>
+                    <p>Review checkout orders, update fulfillment status, and manage tracking notes.</p>
                     <a class="tile-link" asp-controller="AdminOrders" asp-action="Index">Open orders</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="admin-tile">
+                    <span class="feature-label">Trade-ins</span>
+                    <h2>Buying desk</h2>
+                    <p>Review customer trade-in submissions, record estimated offers, and move requests through the review queue.</p>
+                    <a class="tile-link" asp-controller="AdminTradeIns" asp-action="Index">Open trade-ins</a>
                 </div>
             </div>
         </div>

@@ -1,0 +1,111 @@
+@model TradeInRequestFormViewModel
+
+@{
+    ViewData["Title"] = "Trade-In";
+}
+
+<section class="shop-shell">
+    <div class="container">
+        <div class="shop-heading">
+            <div>
+                <p class="eyebrow">Trade-in review</p>
+                <h1>Start a trade-in</h1>
+            </div>
+            <a class="btn btn-outline-pond" asp-controller="Shop" asp-action="Index">Shop games</a>
+        </div>
+
+        <form asp-action="Create" method="post" class="checkout-layout">
+            <div class="checkout-panel">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <h2>Your contact info</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="CustomerName" class="form-label"></label>
+                        <input asp-for="CustomerName" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="CustomerName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CustomerEmail" class="form-label"></label>
+                        <input asp-for="CustomerEmail" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CustomerPhone" class="form-label"></label>
+                        <input asp-for="CustomerPhone" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PreferredContactMethod" class="form-label"></label>
+                        <select asp-for="PreferredContactMethod" class="form-select">
+                            <option>Email</option>
+                            <option>Phone</option>
+                            <option>Text</option>
+                        </select>
+                        <span asp-validation-for="PreferredContactMethod" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h2>Items</h2>
+                <div class="trade-in-items">
+                    @for (var index = 0; index < Model.Items.Count; index++)
+                    {
+                        <div class="trade-in-item">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Items[index].ItemName" class="form-label"></label>
+                                    <input asp-for="Items[index].ItemName" class="form-control" />
+                                    <span asp-validation-for="Items[index].ItemName" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Items[index].Platform" class="form-label"></label>
+                                    <input asp-for="Items[index].Platform" class="form-control" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Items[index].Condition" class="form-label"></label>
+                                    <input asp-for="Items[index].Condition" class="form-control" placeholder="Loose, CIB, sealed" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Items[index].Quantity" class="form-label"></label>
+                                    <input asp-for="Items[index].Quantity" class="form-control" min="1" />
+                                    <span asp-validation-for="Items[index].Quantity" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-9">
+                                    <label asp-for="Items[index].Notes" class="form-label"></label>
+                                    <input asp-for="Items[index].Notes" class="form-control" placeholder="Condition details, missing parts, edition, etc." />
+                                    <span asp-validation-for="Items[index].Notes" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <h2>Notes</h2>
+                <label asp-for="CustomerNotes" class="form-label"></label>
+                <textarea asp-for="CustomerNotes" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="CustomerNotes" class="text-danger"></span>
+            </div>
+
+            <aside class="cart-summary">
+                <h2>What happens next</h2>
+                <div class="trade-in-step">
+                    <strong>1</strong>
+                    <span>We review the list.</span>
+                </div>
+                <div class="trade-in-step">
+                    <strong>2</strong>
+                    <span>Staff prepares an estimated offer.</span>
+                </div>
+                <div class="trade-in-step">
+                    <strong>3</strong>
+                    <span>You bring items in for final inspection.</span>
+                </div>
+                <button class="btn btn-pond w-100 mt-3" type="submit">Submit trade-in</button>
+            </aside>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
