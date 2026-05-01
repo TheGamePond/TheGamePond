@@ -17,8 +17,9 @@ public class ShopController : Controller
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(string? search, string? category)
+    public async Task<IActionResult> Index(string? search, string? category, string? sort)
     {
+        var selectedSort = NormalizeSort(sort);
         var categories = await _context.ProductCategories
             .AsNoTracking()
             .Where(item => item.IsActive)
@@ -49,14 +50,23 @@ public class ShopController : Controller
                 (product.Franchise != null && product.Franchise.Contains(searchText)));
         }
 
-        var productList = await products
-            .OrderBy(product => product.Name)
-            .ToListAsync();
+        products = selectedSort switch
+        {
+            "name" => products.OrderBy(product => product.Name),
+            "price-low" => products.OrderBy(product => product.SalePrice).ThenBy(product => product.Name),
+            "price-high" => products.OrderByDescending(product => product.SalePrice).ThenBy(product => product.Name),
+            _ => products.OrderByDescending(product => product.CreatedAt).ThenBy(product => product.Name)
+        };
+
+        var productList = await products.ToListAsync();
+        var selectedCategoryName = categories.FirstOrDefault(item => item.Slug == category)?.Name;
 
         var model = new ShopIndexViewModel
         {
             Search = search,
             Category = category,
+            Sort = selectedSort,
+            SelectedCategoryName = selectedCategoryName,
             Categories = categories,
             Products = productList.Select(ToCardModel).ToList()
         };
@@ -129,6 +139,17 @@ public class ShopController : Controller
                     IsPrimary = image.IsPrimary
                 })
                 .ToList()
+        };
+    }
+
+    private static string NormalizeSort(string? sort)
+    {
+        return sort switch
+        {
+            "name" => "name",
+            "price-low" => "price-low",
+            "price-high" => "price-high",
+            _ => "newest"
         };
     }
 }

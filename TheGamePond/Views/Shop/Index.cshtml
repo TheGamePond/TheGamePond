@@ -32,11 +32,38 @@
                     }
                 </select>
             </div>
+            <div>
+                <label asp-for="Sort" class="form-label">Sort</label>
+                <select asp-for="Sort" class="form-select">
+                    <option value="newest">Newest</option>
+                    <option value="name">Name A-Z</option>
+                    <option value="price-low">Price low to high</option>
+                    <option value="price-high">Price high to low</option>
+                </select>
+            </div>
             <div class="shop-filter-actions">
                 <button type="submit" class="btn btn-outline-pond">Filter</button>
                 <a class="btn btn-link" asp-action="Index">Clear</a>
             </div>
         </form>
+
+        @if (Model.HasActiveFilters)
+        {
+            <div class="shop-active-filters" aria-label="Active filters">
+                @if (!string.IsNullOrWhiteSpace(Model.Search))
+                {
+                    <span>Search: @Model.Search</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.SelectedCategoryName))
+                {
+                    <span>Category: @Model.SelectedCategoryName</span>
+                }
+                @if (Model.Sort != "newest")
+                {
+                    <span>Sort: @(Model.Sort == "name" ? "Name A-Z" : Model.Sort == "price-low" ? "Price low to high" : "Price high to low")</span>
+                }
+            </div>
+        }
 
         @if (Model.Products.Count == 0)
         {

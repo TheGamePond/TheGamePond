@@ -219,7 +219,7 @@ body {
   border-radius: 8px;
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(220px, 1fr) minmax(190px, 0.5fr) auto;
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, 0.5fr) minmax(180px, 0.5fr) auto;
   margin-bottom: 1.5rem;
   padding: 20px;
 }
@@ -228,6 +228,23 @@ body {
   align-items: center;
   display: flex;
   gap: 0.5rem;
+}
+
+.shop-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.shop-active-filters span {
+  background: rgba(31, 111, 139, 0.1);
+  border: 1px solid rgba(31, 111, 139, 0.14);
+  border-radius: 999px;
+  color: var(--pond-dark-blue);
+  font-size: 0.82rem;
+  font-weight: 850;
+  padding: 0.35rem 0.7rem;
 }
 
 .product-grid {
