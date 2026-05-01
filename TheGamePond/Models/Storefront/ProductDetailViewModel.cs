@@ -1,5 +1,3 @@
-using TheGamePond.Models.Catalog;
-
 namespace TheGamePond.Models.Storefront;
 
 public class ProductDetailViewModel
@@ -18,7 +16,7 @@ public class ProductDetailViewModel
 
     public string? CategoryName { get; set; }
 
-    public ProductCondition Condition { get; set; }
+    public string Condition { get; set; } = string.Empty;
 
     public decimal SalePrice { get; set; }
 

@@ -32,7 +32,7 @@ public class ShopController : Controller
             .Include(product => product.InventoryItem)
             .Include(product => product.Images)
             .AsNoTracking()
-            .Where(product => product.Status == ProductStatus.Active);
+            .Where(product => product.IsActive);
 
         if (!string.IsNullOrWhiteSpace(category))
         {
@@ -83,7 +83,7 @@ public class ShopController : Controller
             .Include(item => item.InventoryItem)
             .Include(item => item.Images)
             .AsNoTracking()
-            .FirstOrDefaultAsync(product => product.Slug == slug && product.Status == ProductStatus.Active);
+            .FirstOrDefaultAsync(product => product.Slug == slug && product.IsActive);
 
         if (product is null)
         {
@@ -111,7 +111,7 @@ public class ShopController : Controller
             Condition = product.Condition,
             SalePrice = product.SalePrice,
             QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
-            PrimaryImagePath = primaryImage?.ImagePath,
+            PrimaryImagePath = primaryImage?.FilePath,
             PrimaryImageAltText = primaryImage?.AltText
         };
     }
@@ -142,7 +142,7 @@ public class ShopController : Controller
                 .ThenBy(image => image.SortOrder)
                 .Select(image => new ShopProductImageViewModel
                 {
-                    ImagePath = image.ImagePath,
+                    ImagePath = image.FilePath,
                     AltText = image.AltText,
                     IsPrimary = image.IsPrimary
                 })

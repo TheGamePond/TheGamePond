@@ -23,7 +23,8 @@ public class AdminCategoriesController : Controller
         var categories = await _dbContext.ProductCategories
             .AsNoTracking()
             .Include(category => category.Products)
-            .OrderBy(category => category.Name)
+            .OrderBy(category => category.SortOrder)
+            .ThenBy(category => category.Name)
             .ToListAsync();
 
         return View(categories);
@@ -42,6 +43,7 @@ public class AdminCategoriesController : Controller
         category.Name = (category.Name ?? string.Empty).Trim();
         category.Slug = CreateSlug(category.Slug, category.Name);
         category.Description = string.IsNullOrWhiteSpace(category.Description) ? null : category.Description.Trim();
+        ModelState.Remove(nameof(category.Slug));
 
         await ValidateSlugAsync(category);
 
@@ -82,6 +84,7 @@ public class AdminCategoriesController : Controller
         category.Name = (category.Name ?? string.Empty).Trim();
         category.Slug = CreateSlug(category.Slug, category.Name);
         category.Description = string.IsNullOrWhiteSpace(category.Description) ? null : category.Description.Trim();
+        ModelState.Remove(nameof(category.Slug));
 
         await ValidateSlugAsync(category);
 
@@ -114,6 +117,8 @@ public class AdminCategoriesController : Controller
         var normalized = source.Trim().ToLowerInvariant();
         var characters = normalized.Select(character => char.IsLetterOrDigit(character) ? character : '-').ToArray();
 
-        return string.Join('-', new string(characters).Split('-', StringSplitOptions.RemoveEmptyEntries));
+        var generatedSlug = string.Join('-', new string(characters).Split('-', StringSplitOptions.RemoveEmptyEntries));
+
+        return string.IsNullOrWhiteSpace(generatedSlug) ? "category" : generatedSlug;
     }
 }

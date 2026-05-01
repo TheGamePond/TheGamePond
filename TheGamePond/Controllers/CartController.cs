@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheGamePond.Data;
 using TheGamePond.Models.Cart;
-using TheGamePond.Models.Catalog;
 using TheGamePond.Services.Cart;
 
 namespace TheGamePond.Controllers;
@@ -33,7 +32,7 @@ public class CartController : Controller
         var product = await _context.Products
             .Include(item => item.InventoryItem)
             .AsNoTracking()
-            .FirstOrDefaultAsync(product => product.Slug == slug && product.Status == ProductStatus.Active);
+            .FirstOrDefaultAsync(product => product.Slug == slug && product.IsActive);
 
         if (product is null)
         {
@@ -92,7 +91,7 @@ public class CartController : Controller
         }
 
         var availableQuantity = await _context.Products
-            .Where(product => product.Slug == slug && product.Status == ProductStatus.Active)
+            .Where(product => product.Slug == slug && product.IsActive)
             .Select(product => product.InventoryItem == null ? 0 : product.InventoryItem.QuantityOnHand)
             .FirstOrDefaultAsync();
 
@@ -144,7 +143,7 @@ public class CartController : Controller
             .Include(item => item.InventoryItem)
             .Include(item => item.Images)
             .AsNoTracking()
-            .Where(product => slugs.Contains(product.Slug) && product.Status == ProductStatus.Active)
+            .Where(product => slugs.Contains(product.Slug) && product.IsActive)
             .ToListAsync();
 
         var resolvedItems = new List<CartItemViewModel>();
@@ -179,7 +178,7 @@ public class CartController : Controller
                 Name = product.Name,
                 Sku = product.Sku,
                 Platform = product.Platform,
-                ImagePath = primaryImage?.ImagePath,
+                ImagePath = primaryImage?.FilePath,
                 ImageAltText = primaryImage?.AltText,
                 UnitPrice = product.SalePrice,
                 Quantity = cartItem.Quantity,

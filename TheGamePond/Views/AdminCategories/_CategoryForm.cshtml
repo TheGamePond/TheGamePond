@@ -16,6 +16,11 @@
             <input asp-for="Slug" class="form-control" />
             <span asp-validation-for="Slug" class="text-danger"></span>
         </div>
+        <div class="col-md-4">
+            <label asp-for="SortOrder" class="form-label"></label>
+            <input asp-for="SortOrder" class="form-control" type="number" />
+            <span asp-validation-for="SortOrder" class="text-danger"></span>
+        </div>
         <div class="col-12">
             <label asp-for="Description" class="form-label"></label>
             <textarea asp-for="Description" class="form-control" rows="3"></textarea>

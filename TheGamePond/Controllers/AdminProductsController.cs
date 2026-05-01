@@ -82,9 +82,11 @@ public class AdminProductsController : Controller
         var product = new Product
         {
             Name = model.Name.Trim(),
+            Slug = await CreateUniqueSlugAsync(model.Name),
             Sku = model.Sku.Trim(),
             Barcode = NormalizeOptional(model.Barcode),
             Platform = model.Platform.Trim(),
+            Franchise = NormalizeOptional(model.Franchise),
             Condition = model.Condition.Trim(),
             Description = NormalizeOptional(model.Description),
             ProductCategoryId = model.ProductCategoryId,
@@ -170,6 +172,7 @@ public class AdminProductsController : Controller
             Sku = product.Sku,
             Barcode = product.Barcode,
             Platform = product.Platform,
+            Franchise = product.Franchise,
             Condition = product.Condition,
             Description = product.Description,
             ProductCategoryId = product.ProductCategoryId,
@@ -211,9 +214,11 @@ public class AdminProductsController : Controller
         }
 
         product.Name = model.Name.Trim();
+        product.Slug = await CreateUniqueSlugAsync(model.Name, product.Id);
         product.Sku = model.Sku.Trim();
         product.Barcode = NormalizeOptional(model.Barcode);
         product.Platform = model.Platform.Trim();
+        product.Franchise = NormalizeOptional(model.Franchise);
         product.Condition = model.Condition.Trim();
         product.Description = NormalizeOptional(model.Description);
         product.ProductCategoryId = model.ProductCategoryId;
@@ -325,7 +330,8 @@ public class AdminProductsController : Controller
         model.Categories = await _dbContext.ProductCategories
             .AsNoTracking()
             .Where(category => category.IsActive)
-            .OrderBy(category => category.Name)
+            .OrderBy(category => category.SortOrder)
+            .ThenBy(category => category.Name)
             .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
             .ToListAsync();
 
@@ -361,6 +367,42 @@ public class AdminProductsController : Controller
         await upload.CopyToAsync(stream);
 
         return $"/uploads/products/{fileName}";
+    }
+
+    private async Task<string> CreateUniqueSlugAsync(string value, int? productId = null)
+    {
+        var baseSlug = CreateSlug(value);
+        var slug = baseSlug;
+        var suffix = 2;
+
+        while (await SlugExistsAsync(slug, productId))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
+    }
+
+    private async Task<bool> SlugExistsAsync(string slug, int? productId)
+    {
+        var products = _dbContext.Products.Where(product => product.Slug == slug);
+
+        if (productId.HasValue)
+        {
+            products = products.Where(product => product.Id != productId.Value);
+        }
+
+        return await products.AnyAsync();
+    }
+
+    private static string CreateSlug(string value)
+    {
+        var normalized = value.Trim().ToLowerInvariant();
+        var characters = normalized.Select(character => char.IsLetterOrDigit(character) ? character : '-').ToArray();
+        var slug = string.Join('-', new string(characters).Split('-', StringSplitOptions.RemoveEmptyEntries));
+
+        return string.IsNullOrWhiteSpace(slug) ? "product" : slug;
     }
 
     private static string? NormalizeOptional(string? value)

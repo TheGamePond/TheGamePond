@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TheGamePond.Models.Catalog;
 
 public class InventoryItem
@@ -11,6 +13,9 @@ public class InventoryItem
     public int QuantityOnHand { get; set; }
 
     public int LowStockThreshold { get; set; } = 1;
+
+    [StringLength(80)]
+    public string? LocationCode { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

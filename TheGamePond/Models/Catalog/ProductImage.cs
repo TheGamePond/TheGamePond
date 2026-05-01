@@ -19,5 +19,7 @@ public class ProductImage
 
     public bool IsPrimary { get; set; }
 
+    public int SortOrder { get; set; }
+
     public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.UtcNow;
 }

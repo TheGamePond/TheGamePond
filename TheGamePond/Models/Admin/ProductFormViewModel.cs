@@ -22,6 +22,9 @@ public class ProductFormViewModel
     [StringLength(80)]
     public string Platform { get; set; } = string.Empty;
 
+    [StringLength(120)]
+    public string? Franchise { get; set; }
+
     [Required]
     [StringLength(80)]
     public string Condition { get; set; } = string.Empty;

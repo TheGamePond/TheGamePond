@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheGamePond.Data;
 using TheGamePond.Models.Admin;
-using TheGamePond.Models.Catalog;
 
 namespace TheGamePond.Controllers;
 
@@ -23,7 +22,7 @@ public class AdminController : Controller
             .Include(product => product.InventoryItem)
             .AsNoTracking()
             .Where(product =>
-                product.Status == ProductStatus.Active &&
+                product.IsActive &&
                 product.InventoryItem != null &&
                 product.InventoryItem.QuantityOnHand <= product.InventoryItem.LowStockThreshold)
             .OrderBy(product => product.InventoryItem!.QuantityOnHand)
@@ -34,10 +33,10 @@ public class AdminController : Controller
         var model = new AdminDashboardViewModel
         {
             ProductCount = await _context.Products.CountAsync(),
-            ActiveProductCount = await _context.Products.CountAsync(product => product.Status == ProductStatus.Active),
-            DraftProductCount = await _context.Products.CountAsync(product => product.Status == ProductStatus.Draft),
+            ActiveProductCount = await _context.Products.CountAsync(product => product.IsActive),
+            DraftProductCount = await _context.Products.CountAsync(product => !product.IsActive),
             LowStockCount = await _context.Products.CountAsync(product =>
-                product.Status == ProductStatus.Active &&
+                product.IsActive &&
                 product.InventoryItem != null &&
                 product.InventoryItem.QuantityOnHand <= product.InventoryItem.LowStockThreshold),
             LowStockProducts = lowStockProducts

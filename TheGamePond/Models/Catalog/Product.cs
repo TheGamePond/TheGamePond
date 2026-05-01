@@ -11,6 +11,10 @@ public class Product
     [StringLength(160)]
     public string Name { get; set; } = string.Empty;
 
+    [Required]
+    [StringLength(180)]
+    public string Slug { get; set; } = string.Empty;
+
     [StringLength(80)]
     public string Sku { get; set; } = string.Empty;
 
@@ -19,6 +23,9 @@ public class Product
 
     [StringLength(80)]
     public string Platform { get; set; } = string.Empty;
+
+    [StringLength(120)]
+    public string? Franchise { get; set; }
 
     [StringLength(80)]
     public string Condition { get; set; } = string.Empty;
