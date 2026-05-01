@@ -71,6 +71,7 @@ artifacts/
 dotnet-install.ps1
 run-dev-server.ps1
 dev-server*.log
+.local-postgres/
 TheGamePond/wwwroot/uploads/
 .env
 .env.*
