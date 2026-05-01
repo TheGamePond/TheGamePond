@@ -1,7 +1,7 @@
-@model TheGamePond.Models.Admin.ProductFormViewModel
+@model TheGamePond.Models.Catalog.ProductCategory
 
 @{
-    ViewData["Title"] = "Edit Product";
+    ViewData["Title"] = "Add Category";
 }
 
 <section class="admin-shell">
@@ -9,12 +9,12 @@
         <div class="admin-heading">
             <div>
                 <p class="eyebrow">Catalog operations</p>
-                <h1>Edit Product</h1>
+                <h1>Add Category</h1>
             </div>
-            <a class="btn btn-outline-pond" asp-action="Details" asp-route-id="@Model.Id">Back</a>
+            <a class="btn btn-outline-pond" asp-action="Index">Back</a>
         </div>
 
-        <partial name="_ProductForm" model="Model" />
+        <partial name="_CategoryForm" model="Model" />
     </div>
 </section>
 

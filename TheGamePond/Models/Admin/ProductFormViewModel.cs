@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
-using TheGamePond.Models.Catalog;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TheGamePond.Models.Admin;
 
@@ -12,54 +11,50 @@ public class ProductFormViewModel
     [StringLength(160)]
     public string Name { get; set; } = string.Empty;
 
-    [StringLength(4000)]
-    public string? Description { get; set; }
-
     [Required]
-    [Display(Name = "SKU")]
-    [StringLength(64)]
+    [StringLength(80)]
     public string Sku { get; set; } = string.Empty;
 
-    [StringLength(64)]
+    [StringLength(80)]
     public string? Barcode { get; set; }
 
+    [Required]
     [StringLength(80)]
-    public string? Platform { get; set; }
-
-    [StringLength(120)]
-    public string? Franchise { get; set; }
+    public string Platform { get; set; } = string.Empty;
 
     [Required]
+    [StringLength(80)]
+    public string Condition { get; set; } = string.Empty;
+
+    [StringLength(1200)]
+    public string? Description { get; set; }
+
     [Display(Name = "Category")]
-    public int CategoryId { get; set; }
-
-    public ProductCondition Condition { get; set; } = ProductCondition.Good;
-
-    public ProductStatus Status { get; set; } = ProductStatus.Draft;
+    [Range(1, int.MaxValue, ErrorMessage = "Choose a category.")]
+    public int ProductCategoryId { get; set; }
 
     [Display(Name = "Cost price")]
     [Range(0, 999999.99)]
-    public decimal? CostPrice { get; set; }
+    public decimal CostPrice { get; set; }
 
-    [Required]
     [Display(Name = "Sale price")]
     [Range(0.01, 999999.99)]
     public decimal SalePrice { get; set; }
 
     [Display(Name = "Quantity on hand")]
-    [Range(0, 999999)]
+    [Range(0, 100000)]
     public int QuantityOnHand { get; set; }
 
     [Display(Name = "Low-stock threshold")]
-    [Range(0, 999999)]
+    [Range(0, 100000)]
     public int LowStockThreshold { get; set; } = 1;
 
-    [Display(Name = "Location code")]
-    [StringLength(80)]
-    public string? LocationCode { get; set; }
+    [Display(Name = "Active")]
+    public bool IsActive { get; set; } = true;
 
-    [Display(Name = "Product image")]
     public IFormFile? ImageUpload { get; set; }
 
-    public IReadOnlyList<ProductImageSummaryViewModel> ExistingImages { get; set; } = new List<ProductImageSummaryViewModel>();
+    public string? ExistingImagePath { get; set; }
+
+    public IEnumerable<SelectListItem> Categories { get; set; } = Array.Empty<SelectListItem>();
 }
