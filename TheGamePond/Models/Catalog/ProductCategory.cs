@@ -10,8 +10,9 @@ public class ProductCategory
     [StringLength(80)]
     public string Name { get; set; } = string.Empty;
 
+    [Required]
     [StringLength(120)]
-    public string? Slug { get; set; }
+    public string Slug { get; set; } = string.Empty;
 
     [StringLength(500)]
     public string? Description { get; set; }

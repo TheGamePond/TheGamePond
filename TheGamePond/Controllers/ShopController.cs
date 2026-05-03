@@ -75,8 +75,9 @@ public class ShopController : Controller
     }
 
     [HttpGet("{slug}")]
-    public async Task<IActionResult> Details(string slug)
+    public async Task<IActionResult> Details(string slug, string? search, string? category, string? sort)
     {
+        var selectedSort = NormalizeSort(sort);
         var product = await _context.Products
             .Include(item => item.Category)
             .Include(item => item.InventoryItem)
@@ -89,7 +90,7 @@ public class ShopController : Controller
             return NotFound();
         }
 
-        return View(ToDetailModel(product));
+        return View(ToDetailModel(product, search, category, selectedSort));
     }
 
     private static ShopProductCardViewModel ToCardModel(Product product)
@@ -115,7 +116,11 @@ public class ShopController : Controller
         };
     }
 
-    private static ProductDetailViewModel ToDetailModel(Product product)
+    private static ProductDetailViewModel ToDetailModel(
+        Product product,
+        string? shopSearch,
+        string? shopCategory,
+        string shopSort)
     {
         return new ProductDetailViewModel
         {
@@ -129,6 +134,9 @@ public class ShopController : Controller
             Condition = product.Condition,
             SalePrice = product.SalePrice,
             QuantityOnHand = product.InventoryItem?.QuantityOnHand ?? 0,
+            ShopSearch = shopSearch,
+            ShopCategory = shopCategory,
+            ShopSort = shopSort,
             Images = product.Images
                 .OrderByDescending(image => image.IsPrimary)
                 .ThenBy(image => image.SortOrder)

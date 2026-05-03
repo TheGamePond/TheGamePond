@@ -87,6 +87,7 @@ public class AdminProductsController : Controller
             Sku = model.Sku.Trim(),
             Barcode = NormalizeOptional(model.Barcode),
             Platform = NormalizeOptional(model.Platform),
+            Franchise = NormalizeOptional(model.Franchise),
             Condition = ParseCondition(model.Condition),
             Description = NormalizeOptional(model.Description),
             CategoryId = model.ProductCategoryId,
@@ -173,6 +174,7 @@ public class AdminProductsController : Controller
             Sku = product.Sku,
             Barcode = product.Barcode,
             Platform = product.Platform ?? string.Empty,
+            Franchise = product.Franchise,
             Condition = product.Condition.ToString(),
             Description = product.Description,
             ProductCategoryId = product.CategoryId,
@@ -217,6 +219,7 @@ public class AdminProductsController : Controller
         product.Sku = model.Sku.Trim();
         product.Barcode = NormalizeOptional(model.Barcode);
         product.Platform = NormalizeOptional(model.Platform);
+        product.Franchise = NormalizeOptional(model.Franchise);
         product.Condition = ParseCondition(model.Condition);
         product.Description = NormalizeOptional(model.Description);
         product.CategoryId = model.ProductCategoryId;

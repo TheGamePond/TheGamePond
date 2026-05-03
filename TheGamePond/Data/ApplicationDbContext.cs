@@ -75,7 +75,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.HasIndex(category => category.Slug).IsUnique();
             entity.Property(category => category.Name).HasMaxLength(80).IsRequired();
-            entity.Property(category => category.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(category => category.Slug).HasMaxLength(120).IsRequired();
             entity.Property(category => category.Description).HasMaxLength(500);
 
             entity.HasData(
@@ -139,8 +139,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(product => product.Name).HasMaxLength(160).IsRequired();
             entity.Property(product => product.Slug).HasMaxLength(180).IsRequired();
             entity.Property(product => product.Description).HasMaxLength(4000);
-            entity.Property(product => product.Sku).HasMaxLength(64).IsRequired();
-            entity.Property(product => product.Barcode).HasMaxLength(64);
+            entity.Property(product => product.Sku).HasMaxLength(80).IsRequired();
+            entity.Property(product => product.Barcode).HasMaxLength(80);
             entity.Property(product => product.Platform).HasMaxLength(80);
             entity.Property(product => product.Franchise).HasMaxLength(120);
             entity.Property(product => product.CostPrice).HasPrecision(18, 2);

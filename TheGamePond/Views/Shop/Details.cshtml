@@ -19,7 +19,11 @@
 <section class="shop-shell">
     <div class="container">
         <div class="mb-4">
-            <a class="btn btn-outline-pond" asp-action="Index">Back to shop</a>
+            <a class="btn btn-outline-pond"
+               asp-action="Index"
+               asp-route-search="@Model.ShopSearch"
+               asp-route-category="@Model.ShopCategory"
+               asp-route-sort="@Model.ShopSort">Back to shop</a>
         </div>
 
         @if (TempData["StatusMessage"] is string message)

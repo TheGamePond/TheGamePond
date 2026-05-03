@@ -34,6 +34,11 @@
             <span asp-validation-for="Platform" class="text-danger"></span>
         </div>
         <div class="col-md-4">
+            <label asp-for="Franchise" class="form-label"></label>
+            <input asp-for="Franchise" class="form-control" placeholder="Mario, Pokemon, Zelda..." />
+            <span asp-validation-for="Franchise" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
             <label asp-for="Condition" class="form-label"></label>
             <input asp-for="Condition" class="form-control" placeholder="New, Used, Sealed..." />
             <span asp-validation-for="Condition" class="text-danger"></span>
