@@ -41,9 +41,9 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TheGamePond.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="pond-app">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow">
+        <nav class="navbar navbar-expand-lg navbar-dark pond-navbar">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
                     <img class="brand-logo" src="~/images/brand/the-game-pond-logo.png" alt="The Game Pond logo" />
@@ -101,13 +101,13 @@
             </div>
         </nav>
     </header>
-    <div>
-        <main role="main" class="pb-3">
+    <div class="site-frame">
+        <main role="main" class="site-main pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer pond-footer">
         <div class="container">
             &copy; 2026 - The Game Pond - Collect. Play. Repeat.
         </div>

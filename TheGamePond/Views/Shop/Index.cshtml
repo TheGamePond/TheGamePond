@@ -15,6 +15,7 @@
                 <p class="eyebrow">Games - TCG - Retro - Collectibles</p>
                 <h1>Shop The Pond</h1>
             </div>
+            <span class="shop-count-badge">@Model.Products.Count finds</span>
         </div>
 
         <form method="get" class="shop-filter-bar">
@@ -42,7 +43,7 @@
                 </select>
             </div>
             <div class="shop-filter-actions">
-                <button type="submit" class="btn btn-outline-pond">Filter</button>
+                <button type="submit" class="btn btn-outline-pond">Apply</button>
                 <a class="btn btn-link" asp-action="Index">Clear</a>
             </div>
         </form>
